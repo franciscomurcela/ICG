@@ -135,82 +135,67 @@ export function createForestScene() {
         const chunkKey = `${x},${z}`;
         if (chunks.has(chunkKey)) return; // Não recriar chunks já existentes
 
+        // Criar um grupo para o chunk
+        const chunkGroup = new THREE.Group();
+        chunkGroup.name = `chunk_${chunkKey}`; // Nome para facilitar o debug
+        chunkGroup.position.set(x * chunkSize, 0, z * chunkSize);
+
+        // Criar o terreno
         const terrainGeometry = new THREE.PlaneGeometry(chunkSize, chunkSize, 10, 10);
         const terrainMaterial = new THREE.MeshStandardMaterial({
-            map: terrainTexture, // Textura do terreno
-            roughness: 1, // Configurar rugosidade para evitar reflexos
-            metalness: 0, // Configurar metalicidade para evitar brilho
+            map: terrainTexture,
+            roughness: 1,
+            metalness: 0,
         });
         const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
         terrain.rotation.x = -Math.PI / 2;
-        terrain.position.set(x * chunkSize, 0, z * chunkSize);
         terrain.receiveShadow = true;
-
-        scene.add(terrain);
-        chunks.set(chunkKey, terrain);
+        chunkGroup.add(terrain);
 
         // Adicionar relva realista ao chunk
         const grassPatch = createRealisticGrassPatch(
-            new THREE.Vector3(x * chunkSize, 0, z * chunkSize),
+            new THREE.Vector3(0, 0, 0), // Relativo ao grupo
             chunkSize,
-            100, // Reduzir densidade da relva
+            100,
             new THREE.TextureLoader().load(grassBladeTexture)
         );
-        scene.add(grassPatch);
+        chunkGroup.add(grassPatch);
 
         // Adicionar árvores ao chunk
         for (let i = 0; i < 8; i++) {
             let position;
             let attempts = 0;
 
-            // Garantir que a posição da árvore não se sobreponha
             do {
                 position = new THREE.Vector3(
-                    Math.random() * chunkSize - chunkSize / 2 + x * chunkSize,
+                    Math.random() * chunkSize - chunkSize / 2,
                     0,
-                    Math.random() * chunkSize - chunkSize / 2 + z * chunkSize
+                    Math.random() * chunkSize - chunkSize / 2
                 );
                 attempts++;
-            } while (treePositions.has(`${Math.round(position.x)},${Math.round(position.z)}`) && attempts < 10);
+            } while (treePositions.has(`${Math.round(position.x + x * chunkSize)},${Math.round(position.z + z * chunkSize)}`) && attempts < 10);
 
             if (attempts < 10) {
-                treePositions.add(`${Math.round(position.x)},${Math.round(position.z)}`);
-                const tree = createTree(position, Math.random() * 0.5 + 1.5, Array.from(treePositions).map(pos => {
-                    const [px, pz] = pos.split(',').map(Number);
-                    return new THREE.Vector3(px, 0, pz);
-                }));
-                scene.add(tree);
+                treePositions.add(`${Math.round(position.x + x * chunkSize)},${Math.round(position.z + z * chunkSize)}`);
+                const tree = createTree(position, Math.random() * 0.5 + 1.5);
+                chunkGroup.add(tree);
             }
         }
 
-        // Usar InstancedMesh para pedras
-        const rockGeometry = new THREE.DodecahedronGeometry(0.5); // Simplificar geometria
-        const rockMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
-        const rockMesh = new THREE.InstancedMesh(rockGeometry, rockMaterial, 10);
-
-        for (let i = 0; i < 10; i++) {
+        // Adicionar pedras ao chunk
+        for (let i = 0; i < 5; i++) {
             const position = new THREE.Vector3(
-                Math.random() * chunkSize - chunkSize / 2 + x * chunkSize,
+                Math.random() * chunkSize - chunkSize / 2,
                 0,
-                Math.random() * chunkSize - chunkSize / 2 + z * chunkSize
+                Math.random() * chunkSize - chunkSize / 2
             );
-            const matrix = new THREE.Matrix4();
-            matrix.setPosition(position);
-            rockMesh.setMatrixAt(i, matrix);
+            const rock = createRock(position, Math.random() * 0.5 + 0.2);
+            chunkGroup.add(rock);
         }
-        scene.add(rockMesh);
 
-        setTimeout(() => {
-            for (let i = 0; i < 5; i++) {
-                const position = new THREE.Vector3(
-                    Math.random() * chunkSize - chunkSize / 2 + x * chunkSize,
-                    0,
-                    Math.random() * chunkSize - chunkSize / 2 + z * chunkSize
-                );
-                const rock = createRock(position, Math.random() * 0.5 + 0.2);
-                scene.add(rock);
-            }
-        }, 0);
+        // Adicionar o grupo do chunk à cena
+        scene.add(chunkGroup);
+        chunks.set(chunkKey, chunkGroup); // Armazenar o grupo no mapa de chunks
     }
 
     // Ambient light

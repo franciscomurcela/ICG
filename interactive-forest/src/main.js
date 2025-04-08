@@ -58,33 +58,46 @@ function onWindowResize() {
 }
 
 function updateChunks() {
-    const cameraParentPosition = controls.getCameraParent().position; // Posição do objeto pai da câmera
+    const cameraParentPosition = controls.getCameraParent().position;
     const cameraChunkX = Math.floor(cameraParentPosition.x / chunkSize);
     const cameraChunkZ = Math.floor(cameraParentPosition.z / chunkSize);
 
-    const visibleRange = 2; // Reduzir o alcance dos chunks visíveis
-    const chunksToKeep = new Set(); // Conjunto para armazenar os chunks que devem ser mantidos
+    const visibleRange = 1;
+    const chunksToKeep = new Set();
 
-    // Gerar novos chunks ao redor da posição atual da câmera
+    // Preencher chunksToKeep com os chunks dentro do alcance
     for (let x = cameraChunkX - visibleRange; x <= cameraChunkX + visibleRange; x++) {
         for (let z = cameraChunkZ - visibleRange; z <= cameraChunkZ + visibleRange; z++) {
-            createChunk(x, z); // Gera o chunk se ainda não existir
-            chunksToKeep.add(`${x},${z}`); // Adiciona o chunk à lista de chunks a serem mantidos
+            const chunkKey = `${x},${z}`;
+            chunksToKeep.add(chunkKey);
         }
     }
 
     // Remover chunks que estão fora do alcance
     for (const chunkKey of chunks.keys()) {
         if (!chunksToKeep.has(chunkKey)) {
-            const chunk = chunks.get(chunkKey);
-            scene.remove(chunk); // Remove o chunk da cena
+            console.debug(`Removendo chunk: ${chunkKey}`);
+            const chunkGroup = chunks.get(chunkKey);
+            scene.remove(chunkGroup); // Remove o grupo do chunk da cena
             chunks.delete(chunkKey); // Remove o chunk do mapa
+            console.debug(`Chunk removido: ${chunkKey}`);
         }
     }
 
+    // Gerar novos chunks ao redor da posição atual da câmera
+    for (let x = cameraChunkX - visibleRange; x <= cameraChunkX + visibleRange; x++) {
+        for (let z = cameraChunkZ - visibleRange; z <= cameraChunkZ + visibleRange; z++) {
+            const chunkKey = `${x},${z}`;
+            if (!chunks.has(chunkKey)) {
+                createChunk(x, z);
+                console.debug(`Chunk criado: ${chunkKey}`);
+            }
+        }
+    }
+
+    console.debug("Chunks existentes:", Array.from(chunks.keys()));
+    console.debug("Número de chunks existentes:", chunks.size);
 }
-
-
 
 function animate() {
     requestAnimationFrame(animate);
