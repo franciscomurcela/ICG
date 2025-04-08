@@ -50,6 +50,10 @@ function toggleWeather(scene, ambientLight, directionalLight, backgroundDay, bac
         directionalLight.intensity = 0.3; // Intensidade baixa como à noite
         directionalLight.color.set(0xffffff); // Cor branca como à luz do dia
         directionalLight.castShadow = false; // Desativar sombras
+        sun.visible = false; // Ocultar o sol
+        moon.visible = false; // Ocultar a lua
+        moonShadow.visible = false; // Ocultar a sombra da lua
+        stars.visible = false; // Ocultar as estrelas
         currentWeather = 'rain';
         console.log('Clima: Chuva');
     } else if (currentWeather === 'rain') {
@@ -59,6 +63,10 @@ function toggleWeather(scene, ambientLight, directionalLight, backgroundDay, bac
         directionalLight.intensity = 0.3; // Intensidade baixa como à noite
         directionalLight.color.set(0xffffff); // Cor branca como à luz do dia
         directionalLight.castShadow = false; // Desativar sombras
+        sun.visible = false; // Ocultar o sol
+        moon.visible = false; // Ocultar a lua
+        moonShadow.visible = false; // Ocultar a sombra da lua
+        stars.visible = false; // Ocultar as estrelas
         currentWeather = 'snow';
         console.log('Clima: Neve');
     } else if (currentWeather === 'snow') {
@@ -68,6 +76,10 @@ function toggleWeather(scene, ambientLight, directionalLight, backgroundDay, bac
         directionalLight.intensity = isDay ? 1.5 : 0.3; // Restaurar intensidade da luz direcional
         directionalLight.color.set(isDay ? 0xffffff : 0x87CEEB); // Restaurar cor da luz
         directionalLight.castShadow = isDay; // Restaurar sombras apenas durante o dia
+        sun.visible = isDay; // Mostrar o sol apenas durante o dia
+        moon.visible = !isDay; // Mostrar a lua apenas durante a noite
+        moonShadow.visible = !isDay; // Mostrar a sombra da lua apenas durante a noite
+        stars.visible = !isDay; // Mostrar as estrelas apenas durante a noite
         currentWeather = 'clear';
         console.log('Clima: Limpo');
     }
