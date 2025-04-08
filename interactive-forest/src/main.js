@@ -62,7 +62,7 @@ function updateChunks() {
     const cameraChunkX = Math.floor(cameraParentPosition.x / chunkSize);
     const cameraChunkZ = Math.floor(cameraParentPosition.z / chunkSize);
 
-    const visibleRange = 1;
+    const visibleRange = 2;
     const chunksToKeep = new Set();
 
     // Preencher chunksToKeep com os chunks dentro do alcance
