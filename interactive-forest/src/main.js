@@ -11,42 +11,57 @@ function init() {
     chunkSize = forestScene.chunkSize;
     chunks = forestScene.chunks;
     toggleDayNight = forestScene.toggleDayNight;
+    const toggleWeather = forestScene.toggleWeather; // Obter a função toggleWeather
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000); // Aumentar o valor de 'far'
-    camera.position.set(0, 1.6, 0); // Altura inicial da câmera
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+    camera.position.set(0, 1.6, 0);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true; // Habilitar sombras
-    renderer.frustumCulled = true; // Ativar frustum culling
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Tipo de sombra para suavizar
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
 
     clock = new THREE.Clock();
     controls = initControls(camera);
 
-    // Adicionar o objeto pai da câmera à cena
     scene.add(controls.getCameraParent());
 
-    // Gerar chunks iniciais
     updateChunks();
 
-    // Adicionar botão para alternar entre dia e noite
-    const button = document.createElement('button');
-    button.innerText = 'Toggle Day/Night';
-    button.style.position = 'absolute';
-    button.style.top = '10px';
-    button.style.right = '10px';
-    button.style.padding = '10px';
-    button.style.background = 'rgba(0, 0, 0, 0.5)';
-    button.style.color = 'white';
-    button.style.border = 'none';
-    button.style.borderRadius = '5px';
-    button.style.cursor = 'pointer';
-    button.addEventListener('click', () => {
+    // Botão para alternar entre dia e noite
+    const dayNightButton = document.createElement('button');
+    dayNightButton.innerText = 'Toggle Day/Night';
+    dayNightButton.style.position = 'absolute';
+    dayNightButton.style.top = '10px';
+    dayNightButton.style.right = '10px';
+    dayNightButton.style.padding = '10px';
+    dayNightButton.style.background = 'rgba(0, 0, 0, 0.5)';
+    dayNightButton.style.color = 'white';
+    dayNightButton.style.border = 'none';
+    dayNightButton.style.borderRadius = '5px';
+    dayNightButton.style.cursor = 'pointer';
+    dayNightButton.addEventListener('click', () => {
         toggleDayNight();
     });
-    document.body.appendChild(button);
+    document.body.appendChild(dayNightButton);
+
+    // Botão para alternar clima
+    const weatherButton = document.createElement('button');
+    weatherButton.innerText = 'Toggle Weather';
+    weatherButton.style.position = 'absolute';
+    weatherButton.style.top = '50px';
+    weatherButton.style.right = '10px';
+    weatherButton.style.padding = '10px';
+    weatherButton.style.background = 'rgba(0, 0, 0, 0.5)';
+    weatherButton.style.color = 'white';
+    weatherButton.style.border = 'none';
+    weatherButton.style.borderRadius = '5px';
+    weatherButton.style.cursor = 'pointer';
+    weatherButton.addEventListener('click', () => {
+        toggleWeather(); // Chamar toggleWeather
+    });
+    document.body.appendChild(weatherButton);
 
     window.addEventListener('resize', onWindowResize, false);
 }
@@ -94,9 +109,6 @@ function updateChunks() {
             }
         }
     }
-
-    console.debug("Chunks existentes:", Array.from(chunks.keys()));
-    console.debug("Número de chunks existentes:", chunks.size);
 }
 
 function animate() {

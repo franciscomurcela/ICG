@@ -5,12 +5,14 @@ import { createTree, createRock, createRealisticGrassPatch } from '../utils/help
 import grassTexture from '../assets/textures/grass.jpg';
 import backgroundTexture from '../assets/textures/background.jpg'; // Importar a imagem de fundo
 import grassBladeTexture from '../assets/textures/grass-blade.png'; // Textura de relva com transparência
+import rainyTexture from '../assets/textures/rainy.jpg'; // Importar o background para chuva
 
 let isDay = true; // Estado inicial: dia
 let sun; // Variável para armazenar o sol
 let stars; // Variável para armazenar as estrelas
 let moon; // Variável para armazenar a lua
 let moonShadow; // Variável para armazenar a sombra da lua
+let currentWeather = 'clear'; // Estado inicial do clima
 
 function toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, backgroundNight) {
     isDay = !isDay;
@@ -37,6 +39,37 @@ function toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, ba
         moon.visible = true; // Mostrar a lua
         moonShadow.visible = true; // Mostrar a sombra da lua
         stars.visible = true; // Mostrar as estrelas
+    }
+}
+
+function toggleWeather(scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy) {
+    if (currentWeather === 'clear') {
+        // Ativar chuva
+        scene.background = backgroundRainy; // Alterar o background para chuva
+        ambientLight.intensity = 0.2; // Intensidade baixa como à noite
+        directionalLight.intensity = 0.3; // Intensidade baixa como à noite
+        directionalLight.color.set(0xffffff); // Cor branca como à luz do dia
+        directionalLight.castShadow = false; // Desativar sombras
+        currentWeather = 'rain';
+        console.log('Clima: Chuva');
+    } else if (currentWeather === 'rain') {
+        // Ativar neve
+        scene.background = backgroundRainy; // Usar o mesmo background para neve
+        ambientLight.intensity = 0.2; // Intensidade baixa como à noite
+        directionalLight.intensity = 0.3; // Intensidade baixa como à noite
+        directionalLight.color.set(0xffffff); // Cor branca como à luz do dia
+        directionalLight.castShadow = false; // Desativar sombras
+        currentWeather = 'snow';
+        console.log('Clima: Neve');
+    } else if (currentWeather === 'snow') {
+        // Limpar o clima
+        scene.background = isDay ? backgroundDay : backgroundNight; // Voltar ao background de dia ou noite
+        ambientLight.intensity = isDay ? 0.5 : 0.2; // Restaurar intensidade da luz ambiente
+        directionalLight.intensity = isDay ? 1.5 : 0.3; // Restaurar intensidade da luz direcional
+        directionalLight.color.set(isDay ? 0xffffff : 0x87CEEB); // Restaurar cor da luz
+        directionalLight.castShadow = isDay; // Restaurar sombras apenas durante o dia
+        currentWeather = 'clear';
+        console.log('Clima: Limpo');
     }
 }
 
@@ -76,10 +109,29 @@ export function createForestScene() {
         console.log('All textures loaded');
     };
 
-    // Backgrounds para dia e noite
+    // Backgrounds para dia, noite e chuva
     const backgroundDay = textureLoader.load(backgroundTexture); // Céu diurno
     const backgroundNight = new THREE.Color(0x000022); // Céu noturno (azul escuro)
+    const backgroundRainy = textureLoader.load(rainyTexture); // Céu chuvoso
     scene.background = backgroundDay; // Define o fundo inicial como diurno
+
+    // Criar luz ambiente
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Luz ambiente inicial
+    scene.add(ambientLight);
+
+    // Criar luz direcional
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    directionalLight.position.set(500, 1000, 500); // Posicionar a luz
+    directionalLight.castShadow = true; // Habilitar projeção de sombras
+    directionalLight.shadow.mapSize.width = 1024; // Aumentar resolução do mapa de sombras
+    directionalLight.shadow.mapSize.height = 1024;
+    directionalLight.shadow.camera.near = 0.1;
+    directionalLight.shadow.camera.far = 2000;
+    directionalLight.shadow.camera.left = -500;
+    directionalLight.shadow.camera.right = 500;
+    directionalLight.shadow.camera.top = 500;
+    directionalLight.shadow.camera.bottom = -500;
+    scene.add(directionalLight);
 
     // Criar o sol
     const sunGeometry = new THREE.SphereGeometry(50, 32, 32); // Esfera para o sol
@@ -198,30 +250,12 @@ export function createForestScene() {
         chunks.set(chunkKey, chunkGroup); // Armazenar o grupo no mapa de chunks
     }
 
-    // Ambient light
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Soft light
-    scene.add(ambientLight);
-
-    // Directional light
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    directionalLight.position.set(500, 1000, 500); // Posicionar a luz
-    directionalLight.castShadow = true; // Habilitar projeção de sombras
-    directionalLight.shadow.mapSize.width = 1024; // Aumentar resolução do mapa de sombras
-    directionalLight.shadow.mapSize.height = 1024;
-
-    directionalLight.shadow.camera.near = 0.1;
-    directionalLight.shadow.camera.far = 2000;
-    directionalLight.shadow.camera.left = -500;
-    directionalLight.shadow.camera.right = 500;
-    directionalLight.shadow.camera.top = 500;
-    directionalLight.shadow.camera.bottom = -500;
-    scene.add(directionalLight);
-
     return {
         scene,
         createChunk,
         chunkSize,
         chunks,
         toggleDayNight: () => toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, backgroundNight),
+        toggleWeather: () => toggleWeather(scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy), // Passar luzes e backgrounds
     };
 }
