@@ -5,11 +5,13 @@
   "main": "src/main.js",
   "scripts": {
     "start": "webpack serve --open",
-    "build": "chmod +x ./node_modules/.bin/webpack && webpack"
+    "build": "webpack"
   },
   "dependencies": {
     "dat.gui": "^0.7.6",
-    "three": "^0.152.0"
+    "three": "^0.152.0",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
@@ -19,8 +21,6 @@
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.6.3",
     "style-loader": "^3.3.1",
-    "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.0"
   },
   "keywords": [
