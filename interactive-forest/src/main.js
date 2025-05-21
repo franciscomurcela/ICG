@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createForestScene } from './scenes/forestScene';
+import { createForestScene, pigMixer } from './scenes/forestScene';
 import { initControls } from './controls/firstPersonControls';
 
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight;
@@ -115,11 +115,14 @@ function animate() {
     requestAnimationFrame(animate);
 
     const delta = clock.getDelta();
-    controls.update(delta); // Atualizar os controles
+    controls.update(delta);
 
-    // Atualizar chunks dinamicamente
+    // Atualiza a animação do porco, se existir
+    if (pigMixer) {
+        pigMixer.update(delta);
+    }
+
     updateChunks();
-
     renderer.render(scene, camera);
 }
 

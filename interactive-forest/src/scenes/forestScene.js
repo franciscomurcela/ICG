@@ -15,6 +15,7 @@ let stars; // Variável para armazenar as estrelas
 let moon; // Variável para armazenar a lua
 let moonShadow; // Variável para armazenar a sombra da lua
 let currentWeather = 'clear'; // Estado inicial do clima
+let pigMixer = null;
 
 function toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, backgroundNight) {
     isDay = !isDay;
@@ -269,9 +270,19 @@ export function createForestScene() {
         pigGLBUrl,
         (gltf) => {
             const pig = gltf.scene;
-            pig.position.set(0, 0, 0); // Posição para ver o porco
-            pig.scale.set(0.1, 0.1, 0.1);   // 5x mais pequeno
+            pig.position.set(0, 0, 0);
+            pig.scale.set(0.1, 0.1, 0.1);
             scene.add(pig);
+
+            // Se houver animações, ativa a primeira
+            if (gltf.animations && gltf.animations.length > 0) {
+                pigMixer = new THREE.AnimationMixer(pig);
+                const action = pigMixer.clipAction(gltf.animations[0]);
+                action.play();
+                action.timeScale = 7.0; // 2x mais rápido (ajusta este valor como quiseres)
+                console.log('Animação do porco ativada');
+            }
+
             console.log('Porco 3D carregado');
         },
         undefined,
@@ -289,3 +300,5 @@ export function createForestScene() {
         toggleWeather: () => toggleWeather(scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy), // Passar luzes e backgrounds
     };
 }
+
+export { pigMixer };
