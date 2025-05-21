@@ -8,6 +8,7 @@ import backgroundTexture from '../assets/textures/background.jpg'; // Importar a
 import grassBladeTexture from '../assets/textures/grass-blade.png'; // Textura de relva com transparência
 import rainyTexture from '../assets/textures/rainy.jpg'; // Importar o background para chuva
 import pigGLBUrl from '../assets/models/pig.glb';
+import rabbitGLBUrl from '../assets/models/rabbit.glb';
 
 let isDay = true; // Estado inicial: dia
 let sun; // Variável para armazenar o sol
@@ -16,6 +17,9 @@ let moon; // Variável para armazenar a lua
 let moonShadow; // Variável para armazenar a sombra da lua
 let currentWeather = 'clear'; // Estado inicial do clima
 let pigMixer = null;
+let rabbitMixer = null;
+let rabbit = null; // <-- Adiciona esta linha
+let rabbitAngle = 0; // Ângulo para o movimento circular
 
 function toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, backgroundNight) {
     isDay = !isDay;
@@ -291,6 +295,31 @@ export function createForestScene() {
         }
     );
 
+    const rabbitLoader = new GLTFLoader();
+    rabbitLoader.load(
+        rabbitGLBUrl,
+        (gltf) => {
+            rabbit = gltf.scene; // <-- Guarda referência global
+            rabbit.position.set(2, 0, 0);
+            rabbit.scale.set(0.05, 0.05, 0.05);
+            scene.add(rabbit);
+
+            if (gltf.animations && gltf.animations.length > 0) {
+                rabbitMixer = new THREE.AnimationMixer(rabbit);
+                const action = rabbitMixer.clipAction(gltf.animations[0]);
+                action.play();
+                action.timeScale = 1.5;
+                console.log('Animação do coelho ativada');
+            }
+
+            console.log('Coelho 3D carregado');
+        },
+        undefined,
+        (error) => {
+            console.error('Erro ao carregar o coelho:', error);
+        }
+    );
+
     return {
         scene,
         createChunk,
@@ -301,4 +330,4 @@ export function createForestScene() {
     };
 }
 
-export { pigMixer };
+export { pigMixer, rabbitMixer, rabbit, rabbitAngle };

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createForestScene, pigMixer } from './scenes/forestScene';
+import { createForestScene, pigMixer, rabbitMixer, rabbit } from './scenes/forestScene';
 import { initControls } from './controls/firstPersonControls';
 
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight;
@@ -111,15 +111,23 @@ function updateChunks() {
     }
 }
 
+let rabbitAngle = 0; // Ângulo para o movimento circular
+
 function animate() {
     requestAnimationFrame(animate);
 
     const delta = clock.getDelta();
     controls.update(delta);
 
-    // Atualiza a animação do porco, se existir
-    if (pigMixer) {
-        pigMixer.update(delta);
+    if (pigMixer) pigMixer.update(delta);
+    if (rabbitMixer) rabbitMixer.update(delta);
+
+    // Movimento circular do coelho
+    if (rabbit) {
+        rabbitAngle += delta * 0.5; // velocidade do círculo
+        const radius = 3;
+        rabbit.position.x = Math.cos(rabbitAngle) * radius;
+        rabbit.position.z = Math.sin(rabbitAngle) * radius;
     }
 
     updateChunks();
