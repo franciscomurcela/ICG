@@ -124,10 +124,18 @@ function animate() {
 
     // Movimento circular do coelho
     if (rabbit) {
-        rabbitAngle += delta * 0.5; // velocidade do círculo
+        rabbitAngle += delta * 1; // velocidade do círculo
         const radius = 3;
-        rabbit.position.x = Math.cos(rabbitAngle) * radius;
-        rabbit.position.z = Math.sin(rabbitAngle) * radius;
+        const x = Math.cos(rabbitAngle) * radius;
+        const z = Math.sin(rabbitAngle) * radius;
+        rabbit.position.x = x;
+        rabbit.position.z = z;
+
+        // Virar o coelho na direção do movimento (tangente ao círculo)
+        // Derivada: dx/dt = -sin, dz/dt = cos
+        const dx = -Math.sin(rabbitAngle);
+        const dz = Math.cos(rabbitAngle);
+        rabbit.rotation.y = Math.atan2(dx, dz);
     }
 
     updateChunks();
