@@ -30,6 +30,10 @@ module.exports = {
                 test: /\.(png|jpg|jpeg|gif|svg)$/,
                 type: 'asset/resource', // Substitui o uso do file-loader
             },
+            {
+                test: /\.(glb|gltf)$/,
+                type: 'asset/resource',
+            },
         ],
     },
     devServer: {

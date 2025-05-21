@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import { createTree, createRock, createRealisticGrassPatch } from '../utils/helpers';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 // Importar texturas diretamente
 import grassTexture from '../assets/textures/grass.jpg';
 import backgroundTexture from '../assets/textures/background.jpg'; // Importar a imagem de fundo
 import grassBladeTexture from '../assets/textures/grass-blade.png'; // Textura de relva com transparência
 import rainyTexture from '../assets/textures/rainy.jpg'; // Importar o background para chuva
+import pigGLBUrl from '../assets/models/pig.glb';
 
 let isDay = true; // Estado inicial: dia
 let sun; // Variável para armazenar o sol
@@ -261,6 +263,22 @@ export function createForestScene() {
         scene.add(chunkGroup);
         chunks.set(chunkKey, chunkGroup); // Armazenar o grupo no mapa de chunks
     }
+
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.load(
+        pigGLBUrl,
+        (gltf) => {
+            const pig = gltf.scene;
+            pig.position.set(0, 0, 0); // Posição para ver o porco
+            pig.scale.set(0.1, 0.1, 0.1);   // 5x mais pequeno
+            scene.add(pig);
+            console.log('Porco 3D carregado');
+        },
+        undefined,
+        (error) => {
+            console.error('Erro ao carregar o porco:', error);
+        }
+    );
 
     return {
         scene,
