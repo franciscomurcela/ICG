@@ -20,6 +20,8 @@ let pigMixer = null;
 let rabbitMixer = null;
 let rabbit = null; // <-- Adiciona esta linha
 let rabbitAngle = 0; // Ângulo para o movimento circular
+let rainParticles = null;
+let snowParticles = null;
 
 function toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, backgroundNight) {
     isDay = !isDay;
@@ -52,6 +54,11 @@ function toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, ba
 function toggleWeather(scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy) {
     if (currentWeather === 'clear') {
         // Ativar chuva
+        if (!rainParticles) {
+            rainParticles = createRainParticles();
+        }
+        scene.add(rainParticles);
+        if (snowParticles) scene.remove(snowParticles);
         scene.background = backgroundRainy; // Alterar o background para chuva
         ambientLight.intensity = 0.2; // Intensidade baixa como à noite
         directionalLight.intensity = 0.3; // Intensidade baixa como à noite
@@ -65,6 +72,11 @@ function toggleWeather(scene, ambientLight, directionalLight, backgroundDay, bac
         console.log('Clima: Chuva');
     } else if (currentWeather === 'rain') {
         // Ativar neve
+        if (!snowParticles) {
+            snowParticles = createSnowParticles();
+        }
+        scene.add(snowParticles);
+        if (rainParticles) scene.remove(rainParticles);
         scene.background = backgroundRainy; // Usar o mesmo background para neve
         ambientLight.intensity = 0.2; // Intensidade baixa como à noite
         directionalLight.intensity = 0.3; // Intensidade baixa como à noite
@@ -77,6 +89,9 @@ function toggleWeather(scene, ambientLight, directionalLight, backgroundDay, bac
         currentWeather = 'snow';
         console.log('Clima: Neve');
     } else if (currentWeather === 'snow') {
+        // Limpar partículas
+        if (rainParticles) scene.remove(rainParticles);
+        if (snowParticles) scene.remove(snowParticles);
         // Limpar o clima
         scene.background = isDay ? backgroundDay : backgroundNight; // Voltar ao background de dia ou noite
         ambientLight.intensity = isDay ? 0.5 : 0.2; // Restaurar intensidade da luz ambiente
@@ -115,6 +130,66 @@ function createStars() {
     const stars = new THREE.Points(starGeometry, starMaterial);
     stars.visible = false; // Inicialmente invisível (apenas visível à noite)
     return stars;
+}
+
+function createRainParticles() {
+    const rainCount = 1000;
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const velocities = [];
+
+    for (let i = 0; i < rainCount; i++) {
+        positions.push(
+            Math.random() * 1000 - 500,
+            Math.random() * 200 + 50,
+            Math.random() * 1000 - 500
+        );
+        velocities.push(0, -Math.random() * 0.5 - 0.5, 0); // velocidade Y negativa
+    }
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('velocity', new THREE.Float32BufferAttribute(velocities, 3));
+
+    const material = new THREE.PointsMaterial({
+        color: 0xaaaaee,
+        size: 0.8,
+        transparent: true,
+        opacity: 0.7
+    });
+
+    return new THREE.Points(geometry, material);
+}
+
+function createSnowParticles() {
+    const snowCount = 800;
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const velocities = [];
+
+    for (let i = 0; i < snowCount; i++) {
+        positions.push(
+            Math.random() * 1000 - 500,
+            Math.random() * 200 + 50,
+            Math.random() * 1000 - 500
+        );
+        velocities.push(
+            (Math.random() - 0.5) * 0.1, // vento lateral
+            -Math.random() * 0.2 - 0.1,  // velocidade Y negativa
+            (Math.random() - 0.5) * 0.1
+        );
+    }
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('velocity', new THREE.Float32BufferAttribute(velocities, 3));
+
+    const material = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 1.5,
+        transparent: true,
+        opacity: 0.8
+    });
+
+    return new THREE.Points(geometry, material);
 }
 
 export function createForestScene() {
@@ -330,4 +405,4 @@ export function createForestScene() {
     };
 }
 
-export { pigMixer, rabbitMixer, rabbit, rabbitAngle };
+export { pigMixer, rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles };

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createForestScene, pigMixer, rabbitMixer, rabbit } from './scenes/forestScene';
+import { createForestScene, pigMixer, rabbitMixer, rabbit, rainParticles, snowParticles } from './scenes/forestScene';
 import { initControls } from './controls/firstPersonControls';
 
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight;
@@ -136,6 +136,33 @@ function animate() {
         const dx = -Math.sin(rabbitAngle);
         const dz = Math.cos(rabbitAngle);
         rabbit.rotation.y = Math.atan2(dx, dz);
+    }
+
+    if (rainParticles && scene.children.includes(rainParticles)) {
+        const pos = rainParticles.geometry.attributes.position;
+        const vel = rainParticles.geometry.attributes.velocity;
+        for (let i = 0; i < pos.count; i++) {
+            pos.array[i * 3 + 1] += vel.array[i * 3 + 1];
+            if (pos.array[i * 3 + 1] < 0) {
+                pos.array[i * 3 + 1] = Math.random() * 200 + 50;
+            }
+        }
+        pos.needsUpdate = true;
+    }
+    if (snowParticles && scene.children.includes(snowParticles)) {
+        const pos = snowParticles.geometry.attributes.position;
+        const vel = snowParticles.geometry.attributes.velocity;
+        for (let i = 0; i < pos.count; i++) {
+            pos.array[i * 3 + 0] += vel.array[i * 3 + 0];
+            pos.array[i * 3 + 1] += vel.array[i * 3 + 1];
+            pos.array[i * 3 + 2] += vel.array[i * 3 + 2];
+            if (pos.array[i * 3 + 1] < 0) {
+                pos.array[i * 3 + 1] = Math.random() * 200 + 50;
+                pos.array[i * 3 + 0] = Math.random() * 1000 - 500;
+                pos.array[i * 3 + 2] = Math.random() * 1000 - 500;
+            }
+        }
+        pos.needsUpdate = true;
     }
 
     updateChunks();
