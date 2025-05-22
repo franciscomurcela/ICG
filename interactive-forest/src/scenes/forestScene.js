@@ -166,6 +166,10 @@ function setWeather(state, scene, ambientLight, directionalLight, backgroundDay,
             stars.visible = false;
             if (!snowParticles) snowParticles = createSnowParticles();
             scene.add(snowParticles);
+            setSnowOnScene(chunks, true); // <-- ativa neve
+            break;
+        default:
+            setSnowOnScene(chunks, false); // <-- desativa neve nos outros climas
             break;
     }
 }
@@ -254,13 +258,57 @@ function createSnowParticles() {
 
     const material = new THREE.PointsMaterial({
         color: 0xffffff,
-        size: 1.5,
+        size: 1,
         transparent: true,
         opacity: 0.8
     });
 
     return new THREE.Points(geometry, material);
 }
+
+function setSnowOnScene(chunks, enable) {
+    for (const chunkGroup of chunks.values()) {
+        chunkGroup.children.forEach(obj => {
+            // Terreno (PlaneGeometry) - só se for MeshStandardMaterial
+            if (
+                obj.isMesh &&
+                obj.geometry &&
+                obj.geometry.type === 'PlaneGeometry' &&
+                obj.material && obj.material.type === 'MeshStandardMaterial'
+            ) {
+                if (enable) {
+                    obj.material.map = null;
+                    obj.material.color.set(0xffffff);
+                } else {
+                    obj.material.map = terrainTexture;
+                    obj.material.color.set(0xffffff);
+                }
+                obj.material.needsUpdate = true;
+            }
+            // Árvores (Group com cones)
+            if (obj.type === 'Group') {
+                obj.children.forEach(child => {
+                    // Folhas das árvores (ConeGeometry)
+                    if (
+                        child.isMesh &&
+                        child.geometry &&
+                        child.geometry.type === 'ConeGeometry' &&
+                        child.material && child.material.type === 'MeshStandardMaterial'
+                    ) {
+                        if (enable) {
+                            child.material.color.set(0xf8f8ff); // branco neve
+                        } else {
+                            child.material.color.set(0x228B22); // verde original
+                        }
+                        child.material.needsUpdate = true;
+                    }
+                });
+            }
+        });
+    }
+}
+
+let terrainTexture; // Torna global
 
 export function createForestScene() {
     const scene = new THREE.Scene();
@@ -274,10 +322,15 @@ export function createForestScene() {
     };
 
     // Backgrounds para dia, noite e chuva
-    const backgroundDay = textureLoader.load(backgroundTexture); // Céu diurno
-    const backgroundNight = new THREE.Color(0x000022); // Céu noturno (azul escuro)
-    const backgroundRainy = textureLoader.load(rainyTexture); // Céu chuvoso
-    scene.background = backgroundDay; // Define o fundo inicial como diurno
+    const backgroundDay = textureLoader.load(backgroundTexture);
+    const backgroundNight = new THREE.Color(0x000022);
+    const backgroundRainy = textureLoader.load(rainyTexture);
+    scene.background = backgroundDay;
+
+    // Terrain texture (agora global)
+    terrainTexture = textureLoader.load(grassTexture);
+    terrainTexture.wrapS = terrainTexture.wrapT = THREE.RepeatWrapping;
+    terrainTexture.repeat.set(50, 50);
 
     // Criar luz ambiente
     const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Luz ambiente inicial
@@ -335,11 +388,6 @@ export function createForestScene() {
     // Criar estrelas
     stars = createStars();
     scene.add(stars);
-
-    // Terrain texture
-    const terrainTexture = textureLoader.load(grassTexture);
-    terrainTexture.wrapS = terrainTexture.wrapT = THREE.RepeatWrapping;
-    terrainTexture.repeat.set(50, 50);
 
     // Chunks de terreno
     const chunkSize = 50; // Reduzir o tamanho do chunk para testar geração dinâmica
