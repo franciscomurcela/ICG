@@ -29,22 +29,6 @@ function init() {
 
     updateChunks();
 
-    // Botão para alternar entre dia e noite
-    const dayNightButton = document.createElement('button');
-    dayNightButton.innerText = 'Toggle Day/Night';
-    dayNightButton.style.position = 'absolute';
-    dayNightButton.style.top = '10px';
-    dayNightButton.style.right = '10px';
-    dayNightButton.style.padding = '10px';
-    dayNightButton.style.background = 'rgba(0, 0, 0, 0.5)';
-    dayNightButton.style.color = 'white';
-    dayNightButton.style.border = 'none';
-    dayNightButton.style.borderRadius = '5px';
-    dayNightButton.style.cursor = 'pointer';
-    dayNightButton.addEventListener('click', () => {
-        toggleDayNight();
-    });
-    document.body.appendChild(dayNightButton);
 
     // Botão para alternar clima
     const weatherButton = document.createElement('button');
@@ -138,13 +122,26 @@ function animate() {
         rabbit.rotation.y = Math.atan2(dx, dz);
     }
 
+    // --- NOVO: manter chuva e neve centradas no utilizador ---
+    const cameraPos = controls.getCameraParent().position;
+    if (rainParticles && scene.children.includes(rainParticles)) {
+        rainParticles.position.set(cameraPos.x, 0, cameraPos.z);
+    }
+    if (snowParticles && scene.children.includes(snowParticles)) {
+        snowParticles.position.set(cameraPos.x, 0, cameraPos.z);
+    }
+
+    // Atualização das partículas
     if (rainParticles && scene.children.includes(rainParticles)) {
         const pos = rainParticles.geometry.attributes.position;
         const vel = rainParticles.geometry.attributes.velocity;
         for (let i = 0; i < pos.count; i++) {
             pos.array[i * 3 + 1] += vel.array[i * 3 + 1];
             if (pos.array[i * 3 + 1] < 0) {
-                pos.array[i * 3 + 1] = Math.random() * 200 + 50;
+                // Quando a gota chega ao chão, reinicia em cima e randomiza X e Z à volta do utilizador
+                pos.array[i * 3 + 1] = Math.random() * 20 + 5;
+                pos.array[i * 3 + 0] = (Math.random() * 1000 - 500) + cameraPos.x;
+                pos.array[i * 3 + 2] = (Math.random() * 1000 - 500) + cameraPos.z;
             }
         }
         pos.needsUpdate = true;
@@ -157,9 +154,9 @@ function animate() {
             pos.array[i * 3 + 1] += vel.array[i * 3 + 1];
             pos.array[i * 3 + 2] += vel.array[i * 3 + 2];
             if (pos.array[i * 3 + 1] < 0) {
-                pos.array[i * 3 + 1] = Math.random() * 200 + 50;
-                pos.array[i * 3 + 0] = Math.random() * 1000 - 500;
-                pos.array[i * 3 + 2] = Math.random() * 1000 - 500;
+                pos.array[i * 3 + 1] = Math.random() * 40 + 10;
+                pos.array[i * 3 + 0] = Math.random() * 60 - 30;
+                pos.array[i * 3 + 2] = Math.random() * 60 - 30;
             }
         }
         pos.needsUpdate = true;

@@ -23,6 +23,10 @@ let rabbitAngle = 0; // Ângulo para o movimento circular
 let rainParticles = null;
 let snowParticles = null;
 
+// Estados possíveis: 'day', 'night', 'rain', 'snow'
+let weatherIndex = 0;
+const weatherStates = ['day', 'night', 'rain', 'snow'];
+
 function toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, backgroundNight) {
     isDay = !isDay;
 
@@ -107,6 +111,70 @@ function toggleWeather(scene, ambientLight, directionalLight, backgroundDay, bac
     }
 }
 
+function setWeather(state, scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy) {
+    // Remove partículas de chuva/neve sempre que muda de clima
+    if (rainParticles) scene.remove(rainParticles);
+    if (snowParticles) scene.remove(snowParticles);
+
+    switch (state) {
+        case 'day':
+            isDay = true;
+            ambientLight.intensity = 0.5;
+            directionalLight.intensity = 1.5;
+            directionalLight.color.set(0xffffff);
+            directionalLight.castShadow = true;
+            scene.background = backgroundDay;
+            sun.visible = true;
+            moon.visible = false;
+            moonShadow.visible = false;
+            stars.visible = false;
+            break;
+        case 'night':
+            isDay = false;
+            ambientLight.intensity = 0.2;
+            directionalLight.intensity = 0.3;
+            directionalLight.color.set(0x87CEEB);
+            directionalLight.castShadow = false;
+            scene.background = backgroundNight;
+            sun.visible = false;
+            moon.visible = true;
+            moonShadow.visible = true;
+            stars.visible = true;
+            break;
+        case 'rain':
+            ambientLight.intensity = 0.2;
+            directionalLight.intensity = 0.3;
+            directionalLight.color.set(0xffffff);
+            directionalLight.castShadow = false;
+            scene.background = backgroundRainy;
+            sun.visible = false;
+            moon.visible = false;
+            moonShadow.visible = false;
+            stars.visible = false;
+            if (!rainParticles) rainParticles = createRainParticles();
+            scene.add(rainParticles);
+            break;
+        case 'snow':
+            ambientLight.intensity = 0.2;
+            directionalLight.intensity = 0.3;
+            directionalLight.color.set(0xffffff);
+            directionalLight.castShadow = false;
+            scene.background = backgroundRainy;
+            sun.visible = false;
+            moon.visible = false;
+            moonShadow.visible = false;
+            stars.visible = false;
+            if (!snowParticles) snowParticles = createSnowParticles();
+            scene.add(snowParticles);
+            break;
+    }
+}
+
+function nextWeather(scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy) {
+    weatherIndex = (weatherIndex + 1) % weatherStates.length;
+    setWeather(weatherStates[weatherIndex], scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy);
+}
+
 function createStars() {
     const starCount = 500; // Número de estrelas
     const starGeometry = new THREE.BufferGeometry();
@@ -138,13 +206,14 @@ function createRainParticles() {
     const positions = [];
     const velocities = [];
 
+    // Área ampla (como antes), mas mais baixa (Y: 5 a 25)
     for (let i = 0; i < rainCount; i++) {
         positions.push(
-            Math.random() * 1000 - 500,
-            Math.random() * 200 + 50,
-            Math.random() * 1000 - 500
+            Math.random() * 1000 - 500, // X: -500 a 500 (área grande)
+            Math.random() * 20 + 5,     // Y: 5 a 25 (mais baixo)
+            Math.random() * 1000 - 500  // Z: -500 a 500 (área grande)
         );
-        velocities.push(0, -Math.random() * 0.5 - 0.5, 0); // velocidade Y negativa
+        velocities.push(0, -Math.random() * 2.5 - 2.5, 0); // velocidade Y negativa, mais rápida
     }
 
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -161,20 +230,21 @@ function createRainParticles() {
 }
 
 function createSnowParticles() {
-    const snowCount = 800;
+    const snowCount = 100; // Menos partículas para neve menos condensada
     const geometry = new THREE.BufferGeometry();
     const positions = [];
     const velocities = [];
 
+    // Área menor e mais baixa (centrada no utilizador)
     for (let i = 0; i < snowCount; i++) {
         positions.push(
-            Math.random() * 1000 - 500,
-            Math.random() * 200 + 50,
-            Math.random() * 1000 - 500
+            Math.random() * 60 - 30, // X: -30 a 30
+            Math.random() * 40 + 10, // Y: 10 a 50 (mais baixo)
+            Math.random() * 60 - 30  // Z: -30 a 30
         );
         velocities.push(
-            (Math.random() - 0.5) * 0.1, // vento lateral
-            -Math.random() * 0.2 - 0.1,  // velocidade Y negativa
+            (Math.random() - 0.5) * 0.1,
+            -Math.random() * 0.5 - 0.2,
             (Math.random() - 0.5) * 0.1
         );
     }
@@ -401,7 +471,7 @@ export function createForestScene() {
         chunkSize,
         chunks,
         toggleDayNight: () => toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, backgroundNight),
-        toggleWeather: () => toggleWeather(scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy), // Passar luzes e backgrounds
+        toggleWeather: () => nextWeather(scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy),
     };
 }
 
