@@ -57,6 +57,7 @@ function toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, ba
 
 
 function setWeather(state, scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy) {
+    currentWeather = state; // <-- Adiciona isto!
     // Remove partículas de chuva/neve sempre que muda de clima
     if (rainParticles) scene.remove(rainParticles);
     if (snowParticles) scene.remove(snowParticles);
@@ -73,6 +74,7 @@ function setWeather(state, scene, ambientLight, directionalLight, backgroundDay,
             moon.visible = false;
             moonShadow.visible = false;
             stars.visible = false;
+            setSnowOnScene(false);
             break;
         case 'night':
             isDay = false;
@@ -85,6 +87,7 @@ function setWeather(state, scene, ambientLight, directionalLight, backgroundDay,
             moon.visible = true;
             moonShadow.visible = true;
             stars.visible = true;
+            setSnowOnScene(false);
             break;
         case 'rain':
             ambientLight.intensity = 0.2;
@@ -98,6 +101,7 @@ function setWeather(state, scene, ambientLight, directionalLight, backgroundDay,
             stars.visible = false;
             if (!rainParticles) rainParticles = createRainParticles();
             scene.add(rainParticles);
+            setSnowOnScene(false);
             break;
         case 'snow':
             ambientLight.intensity = 0.2;
@@ -399,6 +403,25 @@ export function createForestScene() {
         // Adicionar o grupo do chunk à cena
         scene.add(chunkGroup);
         chunks.set(chunkKey, chunkGroup); // Armazenar o grupo no mapa de chunks
+        // Se o clima atual for neve, aplica branco às folhas deste novo chunk
+        if (currentWeather === 'snow') {
+            // Só altera as folhas deste chunk recém-criado
+            chunkGroup.children.forEach(obj => {
+                if (obj.type === 'Group') {
+                    obj.children.forEach(child => {
+                        if (
+                            child.isMesh &&
+                            child.geometry &&
+                            child.geometry.type === 'ConeGeometry' &&
+                            child.material && child.material.type === 'MeshStandardMaterial'
+                        ) {
+                            child.material.color.set(0xffffff); // branco neve
+                            child.material.needsUpdate = true;
+                        }
+                    });
+                }
+            });
+        }
     }
 
     const gltfLoader = new GLTFLoader();
