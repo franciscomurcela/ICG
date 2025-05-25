@@ -55,61 +55,6 @@ function toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, ba
     }
 }
 
-function toggleWeather(scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy) {
-    if (currentWeather === 'clear') {
-        // Ativar chuva
-        if (!rainParticles) {
-            rainParticles = createRainParticles();
-        }
-        scene.add(rainParticles);
-        if (snowParticles) scene.remove(snowParticles);
-        scene.background = backgroundRainy; // Alterar o background para chuva
-        ambientLight.intensity = 0.2; // Intensidade baixa como à noite
-        directionalLight.intensity = 0.3; // Intensidade baixa como à noite
-        directionalLight.color.set(0xffffff); // Cor branca como à luz do dia
-        directionalLight.castShadow = false; // Desativar sombras
-        sun.visible = false; // Ocultar o sol
-        moon.visible = false; // Ocultar a lua
-        moonShadow.visible = false; // Ocultar a sombra da lua
-        stars.visible = false; // Ocultar as estrelas
-        currentWeather = 'rain';
-        console.log('Clima: Chuva');
-    } else if (currentWeather === 'rain') {
-        // Ativar neve
-        if (!snowParticles) {
-            snowParticles = createSnowParticles();
-        }
-        scene.add(snowParticles);
-        if (rainParticles) scene.remove(rainParticles);
-        scene.background = backgroundRainy; // Usar o mesmo background para neve
-        ambientLight.intensity = 0.2; // Intensidade baixa como à noite
-        directionalLight.intensity = 0.3; // Intensidade baixa como à noite
-        directionalLight.color.set(0xffffff); // Cor branca como à luz do dia
-        directionalLight.castShadow = false; // Desativar sombras
-        sun.visible = false; // Ocultar o sol
-        moon.visible = false; // Ocultar a lua
-        moonShadow.visible = false; // Ocultar a sombra da lua
-        stars.visible = false; // Ocultar as estrelas
-        currentWeather = 'snow';
-        console.log('Clima: Neve');
-    } else if (currentWeather === 'snow') {
-        // Limpar partículas
-        if (rainParticles) scene.remove(rainParticles);
-        if (snowParticles) scene.remove(snowParticles);
-        // Limpar o clima
-        scene.background = isDay ? backgroundDay : backgroundNight; // Voltar ao background de dia ou noite
-        ambientLight.intensity = isDay ? 0.5 : 0.2; // Restaurar intensidade da luz ambiente
-        directionalLight.intensity = isDay ? 1.5 : 0.3; // Restaurar intensidade da luz direcional
-        directionalLight.color.set(isDay ? 0xffffff : 0x87CEEB); // Restaurar cor da luz
-        directionalLight.castShadow = isDay; // Restaurar sombras apenas durante o dia
-        sun.visible = isDay; // Mostrar o sol apenas durante o dia
-        moon.visible = !isDay; // Mostrar a lua apenas durante a noite
-        moonShadow.visible = !isDay; // Mostrar a sombra da lua apenas durante a noite
-        stars.visible = !isDay; // Mostrar as estrelas apenas durante a noite
-        currentWeather = 'clear';
-        console.log('Clima: Limpo');
-    }
-}
 
 function setWeather(state, scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy) {
     // Remove partículas de chuva/neve sempre que muda de clima
@@ -166,10 +111,10 @@ function setWeather(state, scene, ambientLight, directionalLight, backgroundDay,
             stars.visible = false;
             if (!snowParticles) snowParticles = createSnowParticles();
             scene.add(snowParticles);
-            setSnowOnScene(chunks, true); // <-- ativa neve
+            setSnowOnScene(true); // <-- ativa neve
             break;
         default:
-            setSnowOnScene(chunks, false); // <-- desativa neve nos outros climas
+            setSnowOnScene(false); // <-- desativa neve nos outros climas
             break;
     }
 }
@@ -266,25 +211,9 @@ function createSnowParticles() {
     return new THREE.Points(geometry, material);
 }
 
-function setSnowOnScene(chunks, enable) {
+function setSnowOnScene(enable) {
     for (const chunkGroup of chunks.values()) {
         chunkGroup.children.forEach(obj => {
-            // Terreno (PlaneGeometry) - só se for MeshStandardMaterial
-            if (
-                obj.isMesh &&
-                obj.geometry &&
-                obj.geometry.type === 'PlaneGeometry' &&
-                obj.material && obj.material.type === 'MeshStandardMaterial'
-            ) {
-                if (enable) {
-                    obj.material.map = null;
-                    obj.material.color.set(0xffffff);
-                } else {
-                    obj.material.map = terrainTexture;
-                    obj.material.color.set(0xffffff);
-                }
-                obj.material.needsUpdate = true;
-            }
             // Árvores (Group com cones)
             if (obj.type === 'Group') {
                 obj.children.forEach(child => {
@@ -296,7 +225,7 @@ function setSnowOnScene(chunks, enable) {
                         child.material && child.material.type === 'MeshStandardMaterial'
                     ) {
                         if (enable) {
-                            child.material.color.set(0xf8f8ff); // branco neve
+                            child.material.color.set(0xffffff); // branco neve
                         } else {
                             child.material.color.set(0x228B22); // verde original
                         }
@@ -310,6 +239,7 @@ function setSnowOnScene(chunks, enable) {
 
 let terrainTexture; // Torna global
 let treeColliders = []; // Adiciona no topo do ficheiro
+let chunks = new Map(); // Torna global
 
 export function createForestScene() {
     const scene = new THREE.Scene();
@@ -392,7 +322,6 @@ export function createForestScene() {
 
     // Chunks de terreno
     const chunkSize = 50; // Reduzir o tamanho do chunk para testar geração dinâmica
-    const chunks = new Map(); // Armazena os chunks gerados
 
     const treePositions = new Set(); // Rastrear posições das árvores
 
