@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createForestScene, pigMixer, rabbitMixer, rabbit, rainParticles, snowParticles } from './scenes/forestScene';
+import { createForestScene, rabbitMixer, rabbit, rainParticles, snowParticles } from './scenes/forestScene';
 import { initControls } from './controls/firstPersonControls';
 
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight;
@@ -72,14 +72,13 @@ function updateChunks() {
         }
     }
 
-    // Remover chunks que estão fora do alcance
+    // Remover chunks fora do alcance
     for (const chunkKey of chunks.keys()) {
         if (!chunksToKeep.has(chunkKey)) {
-            console.debug(`Removendo chunk: ${chunkKey}`);
             const chunkGroup = chunks.get(chunkKey);
-            scene.remove(chunkGroup); // Remove o grupo do chunk da cena
-            chunks.delete(chunkKey); // Remove o chunk do mapa
-            console.debug(`Chunk removido: ${chunkKey}`);
+
+            scene.remove(chunkGroup);
+            chunks.delete(chunkKey);
         }
     }
 
@@ -103,7 +102,6 @@ function animate() {
     const delta = clock.getDelta();
     controls.update(delta);
 
-    if (pigMixer) pigMixer.update(delta);
     if (rabbitMixer) rabbitMixer.update(delta);
 
     // Movimento circular do coelho

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createTree, createRock, createRealisticGrassPatch } from '../utils/helpers';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // Importar texturas diretamente
 import grassTexture from '../assets/textures/grass.jpg';
@@ -17,7 +18,6 @@ let stars; // Variável para armazenar as estrelas
 let moon; // Variável para armazenar a lua
 let moonShadow; // Variável para armazenar a sombra da lua
 let currentWeather = 'clear'; // Estado inicial do clima
-let pigMixer = null;
 let rabbitMixer = null;
 let rabbit = null; // <-- Adiciona esta linha
 let rabbitAngle = 0; // Ângulo para o movimento circular
@@ -268,6 +268,43 @@ let snowTerrainTexture;
 let treeColliders = []; // Adiciona no topo do ficheiro
 let chunks = new Map(); // Torna global
 
+// Guarda o GLTF carregado
+let pigGLTF = null;
+
+// Carrega o modelo do porco uma vez
+const gltfLoader = new GLTFLoader();
+gltfLoader.load(
+    pigGLBUrl,
+    (gltf) => {
+        pigGLTF = gltf;
+        // SPAWN retroativo em todos os chunks já criados
+        for (const chunkGroup of chunks.values()) {
+            spawnPigInChunk(chunkGroup);
+        }
+    },
+    undefined,
+    (error) => {
+        console.error('Erro ao carregar o porco:', error);
+    }
+);
+
+// Função para spawnar porco num chunk (sem animação)
+function spawnPigInChunk(chunkGroup) {
+    if (pigGLTF && pigGLTF.scene && Math.random() < 0.5) {
+        const chunkSize = 50;
+        const pig = clone(pigGLTF.scene); // <-- aqui
+        pig.position.set(
+            Math.random() * chunkSize - chunkSize / 2,
+            0,
+            Math.random() * chunkSize - chunkSize / 2
+        );
+        pig.scale.set(0.2, 0.2, 0.2); // ajuste a escala conforme necessário
+        pig.rotation.y = Math.random() * Math.PI * 2;
+        pig.name = 'Pig_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        chunkGroup.add(pig);
+    }
+}
+
 export function createForestScene() {
     const scene = new THREE.Scene();
 
@@ -432,6 +469,9 @@ export function createForestScene() {
         scene.add(chunkGroup);
         chunks.set(chunkKey, chunkGroup);
 
+        // SPAWN DO PORCO: só se o modelo já estiver carregado
+        spawnPigInChunk(chunkGroup);
+
         // Atualizar folhas e chão do chunk se estiver a nevar
         if (currentWeather === 'snow') {
             // Folhas brancas
@@ -462,32 +502,6 @@ export function createForestScene() {
             });
         }
     }
-
-    const gltfLoader = new GLTFLoader();
-    gltfLoader.load(
-        pigGLBUrl,
-        (gltf) => {
-            const pig = gltf.scene;
-            pig.position.set(0, 0, 0);
-            pig.scale.set(0.1, 0.1, 0.1);
-            scene.add(pig);
-
-            // Se houver animações, ativa a primeira
-            if (gltf.animations && gltf.animations.length > 0) {
-                pigMixer = new THREE.AnimationMixer(pig);
-                const action = pigMixer.clipAction(gltf.animations[0]);
-                action.play();
-                action.timeScale = 7.0; // 2x mais rápido (ajusta este valor como quiseres)
-                console.log('Animação do porco ativada');
-            }
-
-            console.log('Porco 3D carregado');
-        },
-        undefined,
-        (error) => {
-            console.error('Erro ao carregar o porco:', error);
-        }
-    );
 
     const rabbitLoader = new GLTFLoader();
     rabbitLoader.load(
@@ -524,4 +538,5 @@ export function createForestScene() {
     };
 }
 
-export { pigMixer, rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles, treeColliders };
+// Exporte apenas o necessário, sem mixers ou animações do porco
+export { rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles, treeColliders };
