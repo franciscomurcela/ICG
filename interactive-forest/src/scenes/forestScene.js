@@ -270,6 +270,7 @@ let chunks = new Map(); // Torna global
 
 // Guarda o GLTF carregado
 let pigGLTF = null;
+let pigMixers = []; // <-- Adicione isto
 
 // Carrega o modelo do porco uma vez
 const gltfLoader = new GLTFLoader();
@@ -288,20 +289,29 @@ gltfLoader.load(
     }
 );
 
-// Função para spawnar porco num chunk (sem animação)
+// Função para spawnar porco num chunk (com animação)
 function spawnPigInChunk(chunkGroup) {
     if (pigGLTF && pigGLTF.scene && Math.random() < 0.5) {
         const chunkSize = 50;
-        const pig = clone(pigGLTF.scene); // <-- aqui
+        const pig = clone(pigGLTF.scene);
         pig.position.set(
             Math.random() * chunkSize - chunkSize / 2,
-            0,
+            -0.1, // <-- Ajuste aqui para garantir que os pés tocam o solo
             Math.random() * chunkSize - chunkSize / 2
         );
-        pig.scale.set(0.2, 0.2, 0.2); // ajuste a escala conforme necessário
+        pig.scale.set(0.1, 0.1, 0.1);
         pig.rotation.y = Math.random() * Math.PI * 2;
         pig.name = 'Pig_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
         chunkGroup.add(pig);
+
+        // Adicionar animação se houver
+        if (pigGLTF.animations && pigGLTF.animations.length > 0) {
+            const mixer = new THREE.AnimationMixer(pig);
+            const action = mixer.clipAction(pigGLTF.animations[0]);
+            action.play();
+            action.timeScale = 7;
+            pigMixers.push(mixer);
+        }
     }
 }
 
@@ -539,4 +549,4 @@ export function createForestScene() {
 }
 
 // Exporte apenas o necessário, sem mixers ou animações do porco
-export { rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles, treeColliders };
+export { rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles, treeColliders, pigMixers };

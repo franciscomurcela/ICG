@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createForestScene, rabbitMixer, rabbit, rainParticles, snowParticles } from './scenes/forestScene';
+import { createForestScene, rabbitMixer, rabbit, rainParticles, snowParticles, pigMixers } from './scenes/forestScene';
 import { initControls } from './controls/firstPersonControls';
 
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight;
@@ -103,6 +103,11 @@ function animate() {
     controls.update(delta);
 
     if (rabbitMixer) rabbitMixer.update(delta);
+
+    // Atualizar animações dos porcos
+    if (pigMixers && pigMixers.length) {
+        pigMixers.forEach(mixer => mixer.update(delta));
+    }
 
     // Movimento circular do coelho
     if (rabbit) {
