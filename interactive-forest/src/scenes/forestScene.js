@@ -309,6 +309,7 @@ function setSnowOnScene(chunks, enable) {
 }
 
 let terrainTexture; // Torna global
+let treeColliders = []; // Adiciona no topo do ficheiro
 
 export function createForestScene() {
     const scene = new THREE.Scene();
@@ -443,6 +444,15 @@ export function createForestScene() {
                 treePositions.add(`${Math.round(position.x + x * chunkSize)},${Math.round(position.z + z * chunkSize)}`);
                 const tree = createTree(position, Math.random() * 0.5 + 1.5);
                 chunkGroup.add(tree);
+                // Adiciona collider (posição absoluta, raio aproximado)
+                treeColliders.push({
+                    position: new THREE.Vector3(
+                        position.x + chunkGroup.position.x,
+                        0,
+                        position.z + chunkGroup.position.z
+                    ),
+                    radius: 1.2 // Ajusta conforme o tamanho do tronco
+                });
             }
         }
 
@@ -523,4 +533,4 @@ export function createForestScene() {
     };
 }
 
-export { pigMixer, rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles };
+export { pigMixer, rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles, treeColliders };

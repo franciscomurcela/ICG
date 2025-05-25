@@ -1,4 +1,5 @@
 import { Vector3, Object3D } from 'three';
+import { treeColliders } from '../scenes/forestScene';
 
 let camera, cameraParent;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
@@ -127,7 +128,21 @@ function updateControls(delta) {
     const move = new Vector3(velocity.x, 0, velocity.z).applyEuler(cameraParent.rotation);
 
     // Atualizar a posição horizontal do objeto pai
-    cameraParent.position.add(move);
+    const nextPosition = cameraParent.position.clone().add(move);
+
+    // Verificar colisão com árvores
+    let collides = false;
+    for (const collider of treeColliders) {
+        const dist = nextPosition.clone().setY(0).distanceTo(collider.position.clone().setY(0));
+        if (dist < collider.radius + 0.5) { // 0.5 é o "raio" do jogador
+            collides = true;
+            break;
+        }
+    }
+
+    if (!collides) {
+        cameraParent.position.copy(nextPosition);
+    }
 
     // Simular salto usando função sin
     if (isJumping) {
