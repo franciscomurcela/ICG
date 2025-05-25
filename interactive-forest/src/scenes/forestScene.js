@@ -7,6 +7,7 @@ import grassTexture from '../assets/textures/grass.jpg';
 import backgroundTexture from '../assets/textures/background.jpg'; // Importar a imagem de fundo
 import grassBladeTexture from '../assets/textures/grass-blade.png'; // Textura de relva com transparência
 import rainyTexture from '../assets/textures/rainy.jpg'; // Importar o background para chuva
+import snowTexture from '../assets/textures/snow.jpg'; // Importar textura de neve
 import pigGLBUrl from '../assets/models/pig.glb';
 import rabbitGLBUrl from '../assets/models/rabbit.glb';
 
@@ -55,6 +56,22 @@ function toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, ba
     }
 }
 
+function setTerrainTexture(isSnow) {
+    for (const chunkGroup of chunks.values()) {
+        chunkGroup.children.forEach(obj => {
+            // Terreno (PlaneGeometry)
+            if (
+                obj.isMesh &&
+                obj.geometry &&
+                obj.geometry.type === 'PlaneGeometry' &&
+                obj.material && obj.material.type === 'MeshStandardMaterial'
+            ) {
+                obj.material.map = isSnow ? snowTerrainTexture : terrainTexture;
+                obj.material.needsUpdate = true;
+            }
+        });
+    }
+}
 
 function setWeather(state, scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy) {
     currentWeather = state; // <-- Adiciona isto!
@@ -74,6 +91,7 @@ function setWeather(state, scene, ambientLight, directionalLight, backgroundDay,
             moon.visible = false;
             moonShadow.visible = false;
             stars.visible = false;
+            setTerrainTexture(false);
             setSnowOnScene(false);
             break;
         case 'night':
@@ -87,6 +105,7 @@ function setWeather(state, scene, ambientLight, directionalLight, backgroundDay,
             moon.visible = true;
             moonShadow.visible = true;
             stars.visible = true;
+            setTerrainTexture(false);
             setSnowOnScene(false);
             break;
         case 'rain':
@@ -101,6 +120,7 @@ function setWeather(state, scene, ambientLight, directionalLight, backgroundDay,
             stars.visible = false;
             if (!rainParticles) rainParticles = createRainParticles();
             scene.add(rainParticles);
+            setTerrainTexture(false);
             setSnowOnScene(false);
             break;
         case 'snow':
@@ -115,10 +135,12 @@ function setWeather(state, scene, ambientLight, directionalLight, backgroundDay,
             stars.visible = false;
             if (!snowParticles) snowParticles = createSnowParticles();
             scene.add(snowParticles);
-            setSnowOnScene(true); // <-- ativa neve
+            setTerrainTexture(true);
+            setSnowOnScene(true);
             break;
         default:
-            setSnowOnScene(false); // <-- desativa neve nos outros climas
+            setTerrainTexture(false);
+            setSnowOnScene(false);
             break;
     }
 }
@@ -241,7 +263,8 @@ function setSnowOnScene(enable) {
     }
 }
 
-let terrainTexture; // Torna global
+let terrainTexture;
+let snowTerrainTexture;
 let treeColliders = []; // Adiciona no topo do ficheiro
 let chunks = new Map(); // Torna global
 
@@ -266,6 +289,11 @@ export function createForestScene() {
     terrainTexture = textureLoader.load(grassTexture);
     terrainTexture.wrapS = terrainTexture.wrapT = THREE.RepeatWrapping;
     terrainTexture.repeat.set(50, 50);
+
+    
+    snowTerrainTexture = textureLoader.load(snowTexture);
+    snowTerrainTexture.wrapS = snowTerrainTexture.wrapT = THREE.RepeatWrapping;
+    snowTerrainTexture.repeat.set(50, 50);
 
     // Criar luz ambiente
     const ambientLight = new THREE.AmbientLight(0x404040, 0.5); // Luz ambiente inicial
@@ -402,10 +430,11 @@ export function createForestScene() {
 
         // Adicionar o grupo do chunk à cena
         scene.add(chunkGroup);
-        chunks.set(chunkKey, chunkGroup); // Armazenar o grupo no mapa de chunks
-        // Se o clima atual for neve, aplica branco às folhas deste novo chunk
+        chunks.set(chunkKey, chunkGroup);
+
+        // Atualizar folhas e chão do chunk se estiver a nevar
         if (currentWeather === 'snow') {
-            // Só altera as folhas deste chunk recém-criado
+            // Folhas brancas
             chunkGroup.children.forEach(obj => {
                 if (obj.type === 'Group') {
                     obj.children.forEach(child => {
@@ -415,10 +444,20 @@ export function createForestScene() {
                             child.geometry.type === 'ConeGeometry' &&
                             child.material && child.material.type === 'MeshStandardMaterial'
                         ) {
-                            child.material.color.set(0xffffff); // branco neve
+                            child.material.color.set(0xffffff);
                             child.material.needsUpdate = true;
                         }
                     });
+                }
+                // Chão com textura de neve
+                if (
+                    obj.isMesh &&
+                    obj.geometry &&
+                    obj.geometry.type === 'PlaneGeometry' &&
+                    obj.material && obj.material.type === 'MeshStandardMaterial'
+                ) {
+                    obj.material.map = snowTerrainTexture;
+                    obj.material.needsUpdate = true;
                 }
             });
         }
