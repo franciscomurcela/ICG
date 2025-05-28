@@ -45,7 +45,7 @@ function init() {
     const weatherButton = document.createElement('button');
     weatherButton.innerText = 'Toggle Weather';
     weatherButton.style.position = 'absolute';
-    weatherButton.style.top = '50px';
+    weatherButton.style.top = '75px'; // Estava '50px', aumenta para 60px ou mais
     weatherButton.style.right = '10px';
     weatherButton.style.padding = '10px';
     weatherButton.style.background = 'rgba(0, 0, 0, 0.5)';
@@ -182,9 +182,9 @@ createInteractionUI();
 const messageDiv = document.createElement('div');
 messageDiv.id = 'message-ui';
 messageDiv.style.position = 'absolute';
-messageDiv.style.top = '40%';
+messageDiv.style.top = '80px'; // <-- No topo do ecrã
 messageDiv.style.left = '50%';
-messageDiv.style.transform = 'translate(-50%, -50%)';
+messageDiv.style.transform = 'translateX(-50%)'; // <-- Só centrar horizontalmente
 messageDiv.style.padding = '14px 24px';
 messageDiv.style.background = 'rgba(0,0,0,0.8)';
 messageDiv.style.color = '#fff';
