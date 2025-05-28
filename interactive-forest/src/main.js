@@ -413,5 +413,50 @@ window.addEventListener('keydown', (event) => {
     }
 });
 
+// --- MENU POPUP DE INSTRUÇÕES ---
+const helpDiv = document.createElement('div');
+helpDiv.id = 'help-popup';
+helpDiv.style.position = 'absolute';
+helpDiv.style.top = '50%';
+helpDiv.style.left = '50%';
+helpDiv.style.transform = 'translate(-50%, -50%)';
+helpDiv.style.background = 'rgba(0,0,0,0.92)';
+helpDiv.style.color = '#fff';
+helpDiv.style.padding = '32px 40px';
+helpDiv.style.fontSize = '20px';
+helpDiv.style.borderRadius = '16px';
+helpDiv.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
+helpDiv.style.zIndex = 100;
+helpDiv.style.textAlign = 'center';
+helpDiv.style.maxWidth = '90vw';
+helpDiv.style.display = 'block'; // Mostra ao iniciar
+
+helpDiv.innerHTML = `
+    <h2 style="margin-top:0">Bem-vindo à Floresta Interativa!</h2>
+    <ul style="text-align:left; margin: 20px auto 20px auto; max-width: 400px;">
+        <li><b>WASD</b> para mover</li>
+        <li><b>Rato</b> para olhar em volta</li>
+        <li><b>E</b> para interagir (apanhar cenouras, alimentar porcos/coelhos)</li>
+        <li><b>R</b> para mudar o clima</li>
+        <li><b>H</b> para abrir/fechar este menu</li>
+    </ul>
+    <div style="margin-top:20px;">
+        <button id="close-help-btn" style="padding:10px 24px; font-size:18px; border-radius:8px; border:none; cursor:pointer;">Fechar</button>
+    </div>
+`;
+document.body.appendChild(helpDiv);
+
+// Botão para fechar o menu
+document.getElementById('close-help-btn').onclick = () => {
+    helpDiv.style.display = 'none';
+};
+
+// Atalho para abrir/fechar o menu com 'H'
+window.addEventListener('keydown', (event) => {
+    if (event.code === 'KeyH') {
+        helpDiv.style.display = helpDiv.style.display === 'none' ? 'block' : 'none';
+    }
+});
+
 init();
 animate();
