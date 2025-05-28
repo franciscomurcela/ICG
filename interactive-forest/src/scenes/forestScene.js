@@ -367,7 +367,7 @@ rabbitLoader.load(
     rabbitGLBUrl,
     (gltf) => {
         rabbitGLTF = gltf;
-        // SPAWN retroativo em todos os chunks já criados
+        // Faz spawn de coelhos em todos os chunks existentes
         for (const chunkGroup of chunks.values()) {
             spawnRabbitInChunk(chunkGroup);
         }
@@ -382,42 +382,42 @@ rabbitLoader.load(
 function spawnRabbitInChunk(chunkGroup) {
     if (rabbitGLTF && rabbitGLTF.scene && Math.random() < 0.5) {
         const chunkSize = 50;
-        const rabbitInstance = clone(rabbitGLTF.scene);
-        // Parâmetros de movimento aleatórios
+        const rabbit = clone(rabbitGLTF.scene);
+
+        // Dados para movimento circular
         const angle = Math.random() * Math.PI * 2;
         const radius = 5 + Math.random() * 10;
         const centerX = Math.random() * chunkSize - chunkSize / 2;
         const centerZ = Math.random() * chunkSize - chunkSize / 2;
+        const speed = 0.5 + Math.random() * 0.5;
 
-        // Posição inicial
-        rabbitInstance.position.set(
-            centerX + Math.cos(angle) * radius,
+        // Guardar dados no próprio mesh
+        rabbit.userData = {
+            angle,
+            radius,
+            centerX: centerX + chunkGroup.position.x,
+            centerZ: centerZ + chunkGroup.position.z,
+            speed
+        };
+
+        rabbit.position.set(
+            rabbit.userData.centerX + Math.cos(angle) * radius - chunkGroup.position.x,
             0,
-            centerZ + Math.sin(angle) * radius
+            rabbit.userData.centerZ + Math.sin(angle) * radius - chunkGroup.position.z
         );
-        rabbitInstance.scale.set(0.05, 0.05, 0.05);
-        rabbitInstance.rotation.y = Math.random() * Math.PI * 2;
-        rabbitInstance.name = 'Rabbit_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-        chunkGroup.add(rabbitInstance);
+        rabbit.scale.set(0.05, 0.05, 0.05);
+        rabbit.rotation.y = Math.random() * Math.PI * 2;
+        rabbit.name = 'Rabbit_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        chunkGroup.add(rabbit);
 
         // Adicionar animação se houver
         if (rabbitGLTF.animations && rabbitGLTF.animations.length > 0) {
-            const mixer = new THREE.AnimationMixer(rabbitInstance);
+            const mixer = new THREE.AnimationMixer(rabbit);
             const action = mixer.clipAction(rabbitGLTF.animations[0]);
             action.play();
             action.timeScale = 1.5;
             rabbitMixers.push(mixer);
         }
-
-        // Guardar referência para movimento
-        rabbits.push({
-            mesh: rabbitInstance,
-            angle,
-            radius,
-            centerX: centerX + chunkGroup.position.x,
-            centerZ: centerZ + chunkGroup.position.z,
-            speed: 0.5 + Math.random() * 0.5 // velocidade aleatória
-        });
     }
 }
 
@@ -643,4 +643,8 @@ export function createForestScene() {
 }
 
 // Exporte apenas o necessário, sem mixers ou animações do porco
-export { rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles, treeColliders, pigMixers, rabbitMixers, rabbits, carrots };
+export {
+    rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles,
+    treeColliders, pigMixers, rabbitMixers, rabbits, carrots,
+    spawnPigInChunk, spawnRabbitInChunk, rabbitGLTF
+};

@@ -1,5 +1,9 @@
 import * as THREE from 'three';
-import { createForestScene, rabbitMixer, rabbit, rainParticles, snowParticles, pigMixers, rabbitMixers, rabbits, carrots } from './scenes/forestScene';
+import {
+    createForestScene, rabbitMixer, rabbit, rainParticles, snowParticles,
+    pigMixers, rabbitMixers, rabbits, carrots,
+    spawnPigInChunk, spawnRabbitInChunk, rabbitGLTF
+} from './scenes/forestScene';
 import { initControls } from './controls/firstPersonControls';
 
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight;
@@ -98,6 +102,18 @@ function updateChunks() {
         if (!chunksToKeep.has(chunkKey)) {
             const chunkGroup = chunks.get(chunkKey);
 
+            // Remover coelhos associados a este chunk
+            if (rabbits && rabbits.length) {
+                for (let i = rabbits.length - 1; i >= 0; i--) {
+                    if (rabbits[i].chunkGroup === chunkGroup) {
+                        if (rabbits[i].mesh.parent) {
+                            rabbits[i].mesh.parent.remove(rabbits[i].mesh);
+                        }
+                        rabbits.splice(i, 1);
+                    }
+                }
+            }
+
             scene.remove(chunkGroup);
             chunks.delete(chunkKey);
         }
@@ -109,15 +125,27 @@ function updateChunks() {
             const chunkKey = `${x},${z}`;
             if (!chunks.has(chunkKey)) {
                 createChunk(x, z);
+                const chunkGroup = chunks.get(chunkKey);
+                if (chunkGroup) {
+                    spawnPigInChunk(chunkGroup);
+                    if (rabbitGLTF) {
+                        spawnRabbitInChunk(chunkGroup);
+                    }
+                }
                 console.debug(`Chunk criado: ${chunkKey}`);
             }
         }
     }
 
-    // Limpar coelhos cujos meshes já não estão na cena
+    // Limpar coelhos cujos meshes já não estão na cena OU cujo chunk foi removido
     if (rabbits && rabbits.length) {
         for (let i = rabbits.length - 1; i >= 0; i--) {
-            if (!rabbits[i].mesh.parent) {
+            const rabbit = rabbits[i];
+            // Remove se o mesh não tem parent (já não está na cena) OU se o chunkGroup já não está em chunks
+            if (
+                !rabbit.mesh.parent ||
+                ![...chunks.values()].includes(rabbit.chunkGroup)
+            ) {
                 rabbits.splice(i, 1);
             }
         }
@@ -186,6 +214,17 @@ function getPigMeshes() {
     return pigs;
 }
 
+function getRabbitMeshes() {
+    // Só retorna os meshes principais dos coelhos (não filhos internos)
+    const rabbits = [];
+    scene.traverse(obj => {
+        if (obj.name && obj.name.startsWith('Rabbit_') && obj.type === 'Group') {
+            rabbits.push(obj);
+        }
+    });
+    return rabbits;
+}
+
 function animate() {
     requestAnimationFrame(animate);
 
@@ -251,6 +290,18 @@ function animate() {
         interactionDiv.style.display = 'block';
     } else {
         interactionDiv.style.display = 'none';
+    }
+
+    const rabbits = getRabbitMeshes();
+    for (const rabbit of rabbits) {
+        if (rabbit.userData && rabbit.userData.radius) {
+            rabbit.userData.angle += delta * rabbit.userData.speed;
+            rabbit.position.x = rabbit.userData.centerX + Math.cos(rabbit.userData.angle) * rabbit.userData.radius - rabbit.parent.position.x;
+            rabbit.position.z = rabbit.userData.centerZ + Math.sin(rabbit.userData.angle) * rabbit.userData.radius - rabbit.parent.position.z;
+            const dx = -Math.sin(rabbit.userData.angle);
+            const dz = Math.cos(rabbit.userData.angle);
+            rabbit.rotation.y = Math.atan2(dx, dz);
+        }
     }
 
     updateChunks();
