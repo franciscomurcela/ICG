@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createForestScene, rabbitMixer, rabbit, rainParticles, snowParticles, pigMixers } from './scenes/forestScene';
+import { createForestScene, rabbitMixer, rabbit, rainParticles, snowParticles, pigMixers, rabbitMixers, rabbits } from './scenes/forestScene';
 import { initControls } from './controls/firstPersonControls';
 
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight;
@@ -92,6 +92,15 @@ function updateChunks() {
             }
         }
     }
+
+    // Limpar coelhos cujos meshes já não estão na cena
+    if (rabbits && rabbits.length) {
+        for (let i = rabbits.length - 1; i >= 0; i--) {
+            if (!rabbits[i].mesh.parent) {
+                rabbits.splice(i, 1);
+            }
+        }
+    }
 }
 
 let rabbitAngle = 0; // Ângulo para o movimento circular
@@ -109,20 +118,22 @@ function animate() {
         pigMixers.forEach(mixer => mixer.update(delta));
     }
 
-    // Movimento circular do coelho
-    if (rabbit) {
-        rabbitAngle += delta * 1; // velocidade do círculo
-        const radius = 3;
-        const x = Math.cos(rabbitAngle) * radius;
-        const z = Math.sin(rabbitAngle) * radius;
-        rabbit.position.x = x;
-        rabbit.position.z = z;
+    // Atualizar animações dos coelhos
+    if (rabbitMixers && rabbitMixers.length) {
+        rabbitMixers.forEach(mixer => mixer.update(delta));
+    }
 
-        // Virar o coelho na direção do movimento (tangente ao círculo)
-        // Derivada: dx/dt = -sin, dz/dt = cos
-        const dx = -Math.sin(rabbitAngle);
-        const dz = Math.cos(rabbitAngle);
-        rabbit.rotation.y = Math.atan2(dx, dz);
+    // Movimento dos coelhos
+    if (rabbits && rabbits.length) {
+        rabbits.forEach(r => {
+            r.angle += delta * r.speed;
+            r.mesh.position.x = r.centerX + Math.cos(r.angle) * r.radius;
+            r.mesh.position.z = r.centerZ + Math.sin(r.angle) * r.radius;
+            // Virar o coelho na direção do movimento
+            const dx = -Math.sin(r.angle);
+            const dz = Math.cos(r.angle);
+            r.mesh.rotation.y = Math.atan2(dx, dz);
+        });
     }
 
     // --- NOVO: manter chuva e neve centradas no utilizador ---

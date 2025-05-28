@@ -315,6 +315,70 @@ function spawnPigInChunk(chunkGroup) {
     }
 }
 
+let rabbitGLTF = null;
+let rabbitMixers = [];
+let rabbits = []; // <-- Array para guardar os coelhos e seus dados de movimento
+
+// Carrega o modelo do coelho uma vez
+const rabbitLoader = new GLTFLoader();
+rabbitLoader.load(
+    rabbitGLBUrl,
+    (gltf) => {
+        rabbitGLTF = gltf;
+        // SPAWN retroativo em todos os chunks já criados
+        for (const chunkGroup of chunks.values()) {
+            spawnRabbitInChunk(chunkGroup);
+        }
+    },
+    undefined,
+    (error) => {
+        console.error('Erro ao carregar o coelho:', error);
+    }
+);
+
+// Função para spawnar coelho num chunk (com animação)
+function spawnRabbitInChunk(chunkGroup) {
+    if (rabbitGLTF && rabbitGLTF.scene && Math.random() < 0.5) {
+        const chunkSize = 50;
+        const rabbitInstance = clone(rabbitGLTF.scene);
+        // Parâmetros de movimento aleatórios
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 5 + Math.random() * 10;
+        const centerX = Math.random() * chunkSize - chunkSize / 2;
+        const centerZ = Math.random() * chunkSize - chunkSize / 2;
+
+        // Posição inicial
+        rabbitInstance.position.set(
+            centerX + Math.cos(angle) * radius,
+            0,
+            centerZ + Math.sin(angle) * radius
+        );
+        rabbitInstance.scale.set(0.05, 0.05, 0.05);
+        rabbitInstance.rotation.y = Math.random() * Math.PI * 2;
+        rabbitInstance.name = 'Rabbit_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        chunkGroup.add(rabbitInstance);
+
+        // Adicionar animação se houver
+        if (rabbitGLTF.animations && rabbitGLTF.animations.length > 0) {
+            const mixer = new THREE.AnimationMixer(rabbitInstance);
+            const action = mixer.clipAction(rabbitGLTF.animations[0]);
+            action.play();
+            action.timeScale = 1.5;
+            rabbitMixers.push(mixer);
+        }
+
+        // Guardar referência para movimento
+        rabbits.push({
+            mesh: rabbitInstance,
+            angle,
+            radius,
+            centerX: centerX + chunkGroup.position.x,
+            centerZ: centerZ + chunkGroup.position.z,
+            speed: 0.5 + Math.random() * 0.5 // velocidade aleatória
+        });
+    }
+}
+
 export function createForestScene() {
     const scene = new THREE.Scene();
 
@@ -481,6 +545,7 @@ export function createForestScene() {
 
         // SPAWN DO PORCO: só se o modelo já estiver carregado
         spawnPigInChunk(chunkGroup);
+        spawnRabbitInChunk(chunkGroup);
 
         // Atualizar folhas e chão do chunk se estiver a nevar
         if (currentWeather === 'snow') {
@@ -513,31 +578,6 @@ export function createForestScene() {
         }
     }
 
-    const rabbitLoader = new GLTFLoader();
-    rabbitLoader.load(
-        rabbitGLBUrl,
-        (gltf) => {
-            rabbit = gltf.scene; // <-- Guarda referência global
-            rabbit.position.set(2, 0, 0);
-            rabbit.scale.set(0.05, 0.05, 0.05);
-            scene.add(rabbit);
-
-            if (gltf.animations && gltf.animations.length > 0) {
-                rabbitMixer = new THREE.AnimationMixer(rabbit);
-                const action = rabbitMixer.clipAction(gltf.animations[0]);
-                action.play();
-                action.timeScale = 1.5;
-                console.log('Animação do coelho ativada');
-            }
-
-            console.log('Coelho 3D carregado');
-        },
-        undefined,
-        (error) => {
-            console.error('Erro ao carregar o coelho:', error);
-        }
-    );
-
     return {
         scene,
         createChunk,
@@ -549,4 +589,4 @@ export function createForestScene() {
 }
 
 // Exporte apenas o necessário, sem mixers ou animações do porco
-export { rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles, treeColliders, pigMixers };
+export { rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles, treeColliders, pigMixers, rabbitMixers, rabbits };
