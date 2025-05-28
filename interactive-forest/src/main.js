@@ -6,7 +6,7 @@ import {
 } from './scenes/forestScene';
 import { initControls } from './controls/firstPersonControls';
 
-let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight;
+let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight, toggleWeather;
 let foodCount = 3; // Começa com 3 cenouras
     
 let foodDiv;
@@ -22,7 +22,7 @@ function init() {
     chunkSize = forestScene.chunkSize;
     chunks = forestScene.chunks;
     toggleDayNight = forestScene.toggleDayNight;
-    const toggleWeather = forestScene.toggleWeather; // Obter a função toggleWeather
+    toggleWeather = forestScene.toggleWeather; // <-- Atribui aqui
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
     camera.position.set(0, 1.6, 0);
@@ -323,6 +323,47 @@ function animate() {
         interactionDiv.style.display = 'none';
     }
 
+    // --- NOVO: manter chuva e neve centradas no utilizador ---
+    const cameraPos = controls.getCameraParent().position;
+    if (rainParticles && scene.children.includes(rainParticles)) {
+        rainParticles.position.set(cameraPos.x, 0, cameraPos.z);
+    }
+    if (snowParticles && scene.children.includes(snowParticles)) {
+        snowParticles.position.set(cameraPos.x, 0, cameraPos.z);
+    }
+
+    // Atualização das partículas
+    if (rainParticles && scene.children.includes(rainParticles)) {
+        const pos = rainParticles.geometry.attributes.position;
+        const vel = rainParticles.geometry.attributes.velocity;
+        for (let i = 0; i < pos.count; i++) {
+            pos.array[i * 3 + 1] += vel.array[i * 3 + 1];
+            if (pos.array[i * 3 + 1] < 0) {
+                // Quando a gota chega ao chão, reinicia em cima e randomiza X e Z à volta do utilizador
+                pos.array[i * 3 + 1] = Math.random() * 20 + 5;
+                pos.array[i * 3 + 0] = (Math.random() * 1000 - 500) + cameraPos.x;
+                pos.array[i * 3 + 2] = (Math.random() * 1000 - 500) + cameraPos.z;
+            }
+        }
+        pos.needsUpdate = true;
+    }
+    if (snowParticles && scene.children.includes(snowParticles)) {
+        const pos = snowParticles.geometry.attributes.position;
+        const vel = snowParticles.geometry.attributes.velocity;
+        for (let i = 0; i < pos.count; i++) {
+            pos.array[i * 3 + 0] += vel.array[i * 3 + 0];
+            pos.array[i * 3 + 1] += vel.array[i * 3 + 1];
+            pos.array[i * 3 + 2] += vel.array[i * 3 + 2];
+            if (pos.array[i * 3 + 1] < 0) {
+                pos.array[i * 3 + 1] = Math.random() * 40 + 10;
+                pos.array[i * 3 + 0] = Math.random() * 60 - 30;
+                pos.array[i * 3 + 2] = Math.random() * 60 - 30;
+            }
+        }
+        pos.needsUpdate = true;
+    }
+
+
     updateChunks();
     renderer.render(scene, camera);
 }
@@ -366,6 +407,9 @@ window.addEventListener('keydown', (event) => {
                 }, 4000);
             }
         }
+    }
+    if (event.code === 'KeyR') {
+        toggleWeather();
     }
 });
 
