@@ -272,9 +272,11 @@ window.addEventListener('keydown', (event) => {
             foodCount--;
             updateFoodUI();
             showMessage('Porco alimentado');
-            nearestPig.position.y += 1;
+            const pig = nearestPig; // Guarda referência ao porco atual
+            const originalY = pig.position.y;
+            pig.position.y = originalY + 1;
             setTimeout(() => {
-                nearestPig.position.y = 0;
+                pig.position.y = originalY;
             }, 400);
         }
     }

@@ -208,24 +208,39 @@ function createRainParticles() {
 function createCarrot(position) {
     const carrotGroup = new THREE.Group();
 
-    // Corpo da cenoura (cone laranja)
-    const bodyGeometry = new THREE.ConeGeometry(0.15, 0.5, 12);
+    // Corpo da cenoura (cone laranja invertido)
+    const bodyGeometry = new THREE.ConeGeometry(0.15, 0.5, 16);
     const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xffa500 });
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    body.position.y = 0.25;
-    carrotGroup.add(body);
+    body.rotation.x = Math.PI; // Inverter o cone para baixo
+
+    // Aleatoriamente: enterrada ou caída
+    const isBuried = Math.random() < 0.5;
 
     // Folhas (cilindros verdes)
     const leafGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.25, 8);
     const leafMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
     for (let i = 0; i < 3; i++) {
         const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
-        leaf.position.y = 0.55;
+        leaf.position.y = isBuried ? 0.35 : 0.55;
         leaf.rotation.z = Math.PI / 6 * (i - 1);
         carrotGroup.add(leaf);
     }
 
-    carrotGroup.position.copy(position);
+    if (isBuried) {
+        // Enterrada: metade do corpo abaixo do solo
+        body.position.y = 0;
+        carrotGroup.position.y = 0;
+    } else {
+        // Caída: de lado, deitada no chão
+        body.position.y = 0.25;
+        carrotGroup.rotation.z = Math.PI / 2 * (Math.random() < 0.5 ? 1 : -1);
+        carrotGroup.rotation.x = (Math.random() - 0.5) * 0.3;
+        carrotGroup.position.y = 0.05;
+    }
+
+    carrotGroup.add(body);
+    carrotGroup.position.add(position);
     carrotGroup.name = 'Carrot_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
     return carrotGroup;
 }
