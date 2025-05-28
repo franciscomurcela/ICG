@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { createForestScene, rabbitMixer, rabbit, rainParticles, snowParticles, pigMixers, rabbitMixers, rabbits } from './scenes/forestScene';
+import { createForestScene, rabbitMixer, rabbit, rainParticles, snowParticles, pigMixers, rabbitMixers, rabbits, carrots } from './scenes/forestScene';
 import { initControls } from './controls/firstPersonControls';
 
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight;
 let foodCount = 3; // Começa com 3 cenouras
     
-let foodDiv; // <-- Torna global
+let foodDiv;
 
 function updateFoodUI() {
     foodDiv.innerText = `🥕 ${foodCount}`;
@@ -128,6 +128,7 @@ let rabbitAngle = 0; // Ângulo para o movimento circular
 
 let interactionDiv, messageTimeout;
 let nearestPig = null;
+let nearestCarrot = null; // NOVO
 
 // Cria a caixa de interação (apenas uma vez)
 function createInteractionUI() {
@@ -144,7 +145,7 @@ function createInteractionUI() {
     interactionDiv.style.borderRadius = '8px';
     interactionDiv.style.display = 'none';
     interactionDiv.style.zIndex = 30;
-    interactionDiv.innerHTML = "<b>E</b> para alimentar porco";
+    interactionDiv.innerHTML = ""; // Vai ser atualizado dinamicamente
     document.body.appendChild(interactionDiv);
 }
 createInteractionUI();
@@ -205,25 +206,48 @@ function animate() {
         });
     }
 
-    // --- INTERAÇÃO COM PORCOS ---
+    // --- INTERAÇÃO COM PORCOS E CENOURAS ---
     nearestPig = null;
-    let minDist = 2.5;
+    nearestCarrot = null;
+    let minDistPig = 2.5;
+    let minDistCarrot = 1.5;
     const playerPos = controls.getCameraParent().position;
+
+    // Porcos
     const pigs = getPigMeshes();
     for (const pig of pigs) {
-        // Posição global do mesh principal do porco
         const pigWorldPos = new THREE.Vector3();
         pig.getWorldPosition(pigWorldPos);
-        // Calcula distância apenas no plano XZ
         const dx = playerPos.x - pigWorldPos.x;
         const dz = playerPos.z - pigWorldPos.z;
         const distXZ = Math.sqrt(dx * dx + dz * dz);
-        if (distXZ < minDist) {
-            minDist = distXZ;
+        if (distXZ < minDistPig) {
+            minDistPig = distXZ;
             nearestPig = pig;
         }
     }
-    if (nearestPig) {
+
+    // Cenouras
+    if (carrots && carrots.length) {
+        for (const carrot of carrots) {
+            const worldPos = new THREE.Vector3();
+            carrot.getWorldPosition(worldPos);
+            const dx = playerPos.x - worldPos.x;
+            const dz = playerPos.z - worldPos.z;
+            const distXZ = Math.sqrt(dx * dx + dz * dz);
+            if (distXZ < minDistCarrot) {
+                minDistCarrot = distXZ;
+                nearestCarrot = carrot;
+            }
+        }
+    }
+
+    // Mostrar UI de interação
+    if (nearestCarrot) {
+        interactionDiv.innerHTML = "<b>E</b> para apanhar cenoura";
+        interactionDiv.style.display = 'block';
+    } else if (nearestPig) {
+        interactionDiv.innerHTML = "<b>E</b> para alimentar porco";
         interactionDiv.style.display = 'block';
     } else {
         interactionDiv.style.display = 'none';
@@ -234,15 +258,25 @@ function animate() {
 }
 
 window.addEventListener('keydown', (event) => {
-    console.log('Key pressed:', event.code, nearestPig, foodCount);
-    if (event.code === 'KeyE' && nearestPig && foodCount > 0) {
-        foodCount--;
-        updateFoodUI();
-        showMessage('Porco alimentado');
-        nearestPig.position.y += 1;
-        setTimeout(() => {
-            nearestPig.position.y = 0;
-        }, 400);
+    if (event.code === 'KeyE') {
+        if (nearestCarrot) {
+            // Apanhar cenoura
+            if (nearestCarrot.parent) nearestCarrot.parent.remove(nearestCarrot);
+            const idx = carrots.indexOf(nearestCarrot);
+            if (idx !== -1) carrots.splice(idx, 1);
+            foodCount++;
+            updateFoodUI();
+            showMessage('Apanhaste uma cenoura!');
+        } else if (nearestPig && foodCount > 0) {
+            // Alimentar porco
+            foodCount--;
+            updateFoodUI();
+            showMessage('Porco alimentado');
+            nearestPig.position.y += 1;
+            setTimeout(() => {
+                nearestPig.position.y = 0;
+            }, 400);
+        }
     }
 });
 

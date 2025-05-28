@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createTree, createRock, createRealisticGrassPatch } from '../utils/helpers';
+import { createTree, createRock, createRealisticGrassPatch} from '../utils/helpers';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
@@ -23,6 +23,7 @@ let rabbit = null; // <-- Adiciona esta linha
 let rabbitAngle = 0; // Ângulo para o movimento circular
 let rainParticles = null;
 let snowParticles = null;
+let carrots = []; // Array global para cenouras
 
 // Estados possíveis: 'day', 'night', 'rain', 'snow'
 let weatherIndex = 0;
@@ -203,6 +204,32 @@ function createRainParticles() {
 
     return new THREE.Points(geometry, material);
 }
+
+function createCarrot(position) {
+    const carrotGroup = new THREE.Group();
+
+    // Corpo da cenoura (cone laranja)
+    const bodyGeometry = new THREE.ConeGeometry(0.15, 0.5, 12);
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xffa500 });
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    body.position.y = 0.25;
+    carrotGroup.add(body);
+
+    // Folhas (cilindros verdes)
+    const leafGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.25, 8);
+    const leafMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+    for (let i = 0; i < 3; i++) {
+        const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
+        leaf.position.y = 0.55;
+        leaf.rotation.z = Math.PI / 6 * (i - 1);
+        carrotGroup.add(leaf);
+    }
+
+    carrotGroup.position.copy(position);
+    carrotGroup.name = 'Carrot_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    return carrotGroup;
+}
+
 
 function createSnowParticles() {
     const snowCount = 100; // Menos partículas para neve menos condensada
@@ -539,6 +566,18 @@ export function createForestScene() {
             chunkGroup.add(rock);
         }
 
+        // Adicionar cenouras colecionáveis ao chunk
+        for (let i = 0; i < 2; i++) { // 2 cenouras por chunk (ajusta como quiseres)
+            const pos = new THREE.Vector3(
+                Math.random() * chunkSize - chunkSize / 2,
+                0,
+                Math.random() * chunkSize - chunkSize / 2
+            );
+            const carrot = createCarrot(pos);
+            chunkGroup.add(carrot);
+            carrots.push(carrot);
+        }
+
         // Adicionar o grupo do chunk à cena
         scene.add(chunkGroup);
         chunks.set(chunkKey, chunkGroup);
@@ -589,4 +628,4 @@ export function createForestScene() {
 }
 
 // Exporte apenas o necessário, sem mixers ou animações do porco
-export { rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles, treeColliders, pigMixers, rabbitMixers, rabbits };
+export { rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles, treeColliders, pigMixers, rabbitMixers, rabbits, carrots };
