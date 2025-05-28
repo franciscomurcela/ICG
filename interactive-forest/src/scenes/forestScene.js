@@ -386,7 +386,7 @@ function spawnRabbitInChunk(chunkGroup) {
 
         // Dados para movimento circular
         const angle = Math.random() * Math.PI * 2;
-        const radius = 5 + Math.random() * 10;
+        const radius = 1.5 + Math.random() * 10;
         const centerX = Math.random() * chunkSize - chunkSize / 2;
         const centerZ = Math.random() * chunkSize - chunkSize / 2;
         const speed = 0.5 + Math.random() * 0.5;

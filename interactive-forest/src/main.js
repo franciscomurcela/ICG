@@ -157,6 +157,7 @@ let rabbitAngle = 0; // Ângulo para o movimento circular
 let interactionDiv, messageTimeout;
 let nearestPig = null;
 let nearestCarrot = null; // NOVO
+let nearestRabbit = null;
 
 // Cria a caixa de interação (apenas uma vez)
 function createInteractionUI() {
@@ -248,8 +249,10 @@ function animate() {
     // --- INTERAÇÃO COM PORCOS E CENOURAS ---
     nearestPig = null;
     nearestCarrot = null;
+    nearestRabbit = null;
     let minDistPig = 2.5;
     let minDistCarrot = 1.5;
+    let minDistRabbit = 2.5;
     const playerPos = controls.getCameraParent().position;
 
     // Porcos
@@ -281,6 +284,31 @@ function animate() {
         }
     }
 
+    // Coelhos
+    const rabbits = getRabbitMeshes();
+    nearestRabbit = null;
+    for (const rabbit of rabbits) {
+        const rabbitWorldPos = new THREE.Vector3();
+        rabbit.getWorldPosition(rabbitWorldPos);
+        const dx = playerPos.x - rabbitWorldPos.x;
+        const dz = playerPos.z - rabbitWorldPos.z;
+        const distXZ = Math.sqrt(dx * dx + dz * dz);
+        if (distXZ < minDistRabbit) {
+            minDistRabbit = distXZ;
+            nearestRabbit = rabbit;
+        }
+
+        // Movimento circular (já existente)
+        if (rabbit.userData && rabbit.userData.radius) {
+            rabbit.userData.angle += delta * rabbit.userData.speed;
+            rabbit.position.x = rabbit.userData.centerX + Math.cos(rabbit.userData.angle) * rabbit.userData.radius - rabbit.parent.position.x;
+            rabbit.position.z = rabbit.userData.centerZ + Math.sin(rabbit.userData.angle) * rabbit.userData.radius - rabbit.parent.position.z;
+            const dx2 = -Math.sin(rabbit.userData.angle);
+            const dz2 = Math.cos(rabbit.userData.angle);
+            rabbit.rotation.y = Math.atan2(dx2, dz2);
+        }
+    }
+
     // Mostrar UI de interação
     if (nearestCarrot) {
         interactionDiv.innerHTML = "<b>E</b> para apanhar cenoura";
@@ -288,20 +316,11 @@ function animate() {
     } else if (nearestPig) {
         interactionDiv.innerHTML = "<b>E</b> para alimentar porco";
         interactionDiv.style.display = 'block';
+    } else if (nearestRabbit) {
+        interactionDiv.innerHTML = "<b>E</b> para alimentar coelho";
+        interactionDiv.style.display = 'block';
     } else {
         interactionDiv.style.display = 'none';
-    }
-
-    const rabbits = getRabbitMeshes();
-    for (const rabbit of rabbits) {
-        if (rabbit.userData && rabbit.userData.radius) {
-            rabbit.userData.angle += delta * rabbit.userData.speed;
-            rabbit.position.x = rabbit.userData.centerX + Math.cos(rabbit.userData.angle) * rabbit.userData.radius - rabbit.parent.position.x;
-            rabbit.position.z = rabbit.userData.centerZ + Math.sin(rabbit.userData.angle) * rabbit.userData.radius - rabbit.parent.position.z;
-            const dx = -Math.sin(rabbit.userData.angle);
-            const dz = Math.cos(rabbit.userData.angle);
-            rabbit.rotation.y = Math.atan2(dx, dz);
-        }
     }
 
     updateChunks();
@@ -329,6 +348,23 @@ window.addEventListener('keydown', (event) => {
             setTimeout(() => {
                 pig.position.y = originalY;
             }, 400);
+        } else if (nearestRabbit && foodCount > 0) {
+            // Alimentar coelho
+            foodCount--;
+            updateFoodUI();
+            showMessage('Coelho alimentado!');
+            // Aumentar velocidade do coelho
+            if (nearestRabbit.userData && nearestRabbit.userData.speed) {
+                const rabbit = nearestRabbit; // Guarda referência ao coelho atual
+                const originalSpeed = rabbit.userData.speed;
+                rabbit.userData.speed = originalSpeed * 2.5;
+                setTimeout(() => {
+                    // Verifica se o coelho ainda existe antes de restaurar
+                    if (rabbit.userData) {
+                        rabbit.userData.speed = originalSpeed;
+                    }
+                }, 4000);
+            }
         }
     }
 });
