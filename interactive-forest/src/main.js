@@ -3,6 +3,13 @@ import { createForestScene, rabbitMixer, rabbit, rainParticles, snowParticles, p
 import { initControls } from './controls/firstPersonControls';
 
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight;
+let foodCount = 3; // Começa com 3 cenouras
+    
+let foodDiv; // <-- Torna global
+
+function updateFoodUI() {
+    foodDiv.innerText = `🥕 ${foodCount}`;
+}
 
 function init() {
     const forestScene = createForestScene();
@@ -46,6 +53,20 @@ function init() {
         toggleWeather(); // Chamar toggleWeather
     });
     document.body.appendChild(weatherButton);
+
+    foodDiv = document.createElement('div'); // <-- Remove 'const'
+    foodDiv.id = 'food-info';
+    foodDiv.style.position = 'absolute';
+    foodDiv.style.top = '20px';
+    foodDiv.style.right = '10px';
+    foodDiv.style.color = 'orange';
+    foodDiv.style.fontSize = '20px';
+    foodDiv.style.background = 'rgba(0,0,0,0.5)';
+    foodDiv.style.padding = '8px';
+    foodDiv.style.borderRadius = '8px';
+    foodDiv.style.zIndex = 20;
+    foodDiv.innerText = `🥕 ${foodCount}`;
+    document.body.appendChild(foodDiv);
 
     window.addEventListener('resize', onWindowResize, false);
 }
@@ -105,6 +126,65 @@ function updateChunks() {
 
 let rabbitAngle = 0; // Ângulo para o movimento circular
 
+let interactionDiv, messageTimeout;
+let nearestPig = null;
+
+// Cria a caixa de interação (apenas uma vez)
+function createInteractionUI() {
+    interactionDiv = document.createElement('div');
+    interactionDiv.id = 'interaction-ui';
+    interactionDiv.style.position = 'absolute';
+    interactionDiv.style.top = '50%';
+    interactionDiv.style.left = '50%';
+    interactionDiv.style.transform = 'translate(-50%, -120px)';
+    interactionDiv.style.padding = '12px 20px';
+    interactionDiv.style.background = 'rgba(0,0,0,0.7)';
+    interactionDiv.style.color = '#fff';
+    interactionDiv.style.fontSize = '22px';
+    interactionDiv.style.borderRadius = '8px';
+    interactionDiv.style.display = 'none';
+    interactionDiv.style.zIndex = 30;
+    interactionDiv.innerHTML = "<b>E</b> para alimentar porco";
+    document.body.appendChild(interactionDiv);
+}
+createInteractionUI();
+
+// Cria a caixa de mensagem
+const messageDiv = document.createElement('div');
+messageDiv.id = 'message-ui';
+messageDiv.style.position = 'absolute';
+messageDiv.style.top = '40%';
+messageDiv.style.left = '50%';
+messageDiv.style.transform = 'translate(-50%, -50%)';
+messageDiv.style.padding = '14px 24px';
+messageDiv.style.background = 'rgba(0,0,0,0.8)';
+messageDiv.style.color = '#fff';
+messageDiv.style.fontSize = '24px';
+messageDiv.style.borderRadius = '10px';
+messageDiv.style.display = 'none';
+messageDiv.style.zIndex = 40;
+document.body.appendChild(messageDiv);
+
+function showMessage(text) {
+    messageDiv.innerText = text;
+    messageDiv.style.display = 'block';
+    clearTimeout(messageTimeout);
+    messageTimeout = setTimeout(() => {
+        messageDiv.style.display = 'none';
+    }, 1200);
+}
+
+function getPigMeshes() {
+    // Só retorna os meshes principais dos porcos (não filhos internos)
+    const pigs = [];
+    scene.traverse(obj => {
+        if (obj.name && obj.name.startsWith('Pig_') && obj.type === 'Group') {
+            pigs.push(obj);
+        }
+    });
+    return pigs;
+}
+
 function animate() {
     requestAnimationFrame(animate);
 
@@ -112,73 +192,59 @@ function animate() {
     controls.update(delta);
 
     if (rabbitMixer) rabbitMixer.update(delta);
-
-    // Atualizar animações dos porcos
-    if (pigMixers && pigMixers.length) {
-        pigMixers.forEach(mixer => mixer.update(delta));
-    }
-
-    // Atualizar animações dos coelhos
-    if (rabbitMixers && rabbitMixers.length) {
-        rabbitMixers.forEach(mixer => mixer.update(delta));
-    }
-
-    // Movimento dos coelhos
+    if (pigMixers && pigMixers.length) pigMixers.forEach(mixer => mixer.update(delta));
+    if (rabbitMixers && rabbitMixers.length) rabbitMixers.forEach(mixer => mixer.update(delta));
     if (rabbits && rabbits.length) {
         rabbits.forEach(r => {
             r.angle += delta * r.speed;
             r.mesh.position.x = r.centerX + Math.cos(r.angle) * r.radius;
             r.mesh.position.z = r.centerZ + Math.sin(r.angle) * r.radius;
-            // Virar o coelho na direção do movimento
             const dx = -Math.sin(r.angle);
             const dz = Math.cos(r.angle);
             r.mesh.rotation.y = Math.atan2(dx, dz);
         });
     }
 
-    // --- NOVO: manter chuva e neve centradas no utilizador ---
-    const cameraPos = controls.getCameraParent().position;
-    if (rainParticles && scene.children.includes(rainParticles)) {
-        rainParticles.position.set(cameraPos.x, 0, cameraPos.z);
-    }
-    if (snowParticles && scene.children.includes(snowParticles)) {
-        snowParticles.position.set(cameraPos.x, 0, cameraPos.z);
-    }
-
-    // Atualização das partículas
-    if (rainParticles && scene.children.includes(rainParticles)) {
-        const pos = rainParticles.geometry.attributes.position;
-        const vel = rainParticles.geometry.attributes.velocity;
-        for (let i = 0; i < pos.count; i++) {
-            pos.array[i * 3 + 1] += vel.array[i * 3 + 1];
-            if (pos.array[i * 3 + 1] < 0) {
-                // Quando a gota chega ao chão, reinicia em cima e randomiza X e Z à volta do utilizador
-                pos.array[i * 3 + 1] = Math.random() * 20 + 5;
-                pos.array[i * 3 + 0] = (Math.random() * 1000 - 500) + cameraPos.x;
-                pos.array[i * 3 + 2] = (Math.random() * 1000 - 500) + cameraPos.z;
-            }
+    // --- INTERAÇÃO COM PORCOS ---
+    nearestPig = null;
+    let minDist = 2.5;
+    const playerPos = controls.getCameraParent().position;
+    const pigs = getPigMeshes();
+    for (const pig of pigs) {
+        // Posição global do mesh principal do porco
+        const pigWorldPos = new THREE.Vector3();
+        pig.getWorldPosition(pigWorldPos);
+        // Calcula distância apenas no plano XZ
+        const dx = playerPos.x - pigWorldPos.x;
+        const dz = playerPos.z - pigWorldPos.z;
+        const distXZ = Math.sqrt(dx * dx + dz * dz);
+        if (distXZ < minDist) {
+            minDist = distXZ;
+            nearestPig = pig;
         }
-        pos.needsUpdate = true;
     }
-    if (snowParticles && scene.children.includes(snowParticles)) {
-        const pos = snowParticles.geometry.attributes.position;
-        const vel = snowParticles.geometry.attributes.velocity;
-        for (let i = 0; i < pos.count; i++) {
-            pos.array[i * 3 + 0] += vel.array[i * 3 + 0];
-            pos.array[i * 3 + 1] += vel.array[i * 3 + 1];
-            pos.array[i * 3 + 2] += vel.array[i * 3 + 2];
-            if (pos.array[i * 3 + 1] < 0) {
-                pos.array[i * 3 + 1] = Math.random() * 40 + 10;
-                pos.array[i * 3 + 0] = Math.random() * 60 - 30;
-                pos.array[i * 3 + 2] = Math.random() * 60 - 30;
-            }
-        }
-        pos.needsUpdate = true;
+    if (nearestPig) {
+        interactionDiv.style.display = 'block';
+    } else {
+        interactionDiv.style.display = 'none';
     }
 
     updateChunks();
     renderer.render(scene, camera);
 }
+
+window.addEventListener('keydown', (event) => {
+    console.log('Key pressed:', event.code, nearestPig, foodCount);
+    if (event.code === 'KeyE' && nearestPig && foodCount > 0) {
+        foodCount--;
+        updateFoodUI();
+        showMessage('Porco alimentado');
+        nearestPig.position.y += 1;
+        setTimeout(() => {
+            nearestPig.position.y = 0;
+        }, 400);
+    }
+});
 
 init();
 animate();
