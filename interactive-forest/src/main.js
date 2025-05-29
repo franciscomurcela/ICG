@@ -473,7 +473,14 @@ helpDiv.innerHTML = `
         <li><b>E</b> para interagir (apanhar cenouras, alimentar porcos/coelhos)</li>
         <li><b>R</b> para mudar o clima</li>
         <li><b>H</b> para abrir/fechar este menu</li>
+        <li><b>Chunks +/-</b> para ajustar o alcance do mundo (menos = mais leve para PC fraco)</li>
     </ul>
+    <div style="margin-top:16px;">
+        <span>Chunks ativos: </span>
+        <button id="help-range-dec" style="margin-right:5px;">-</button>
+        <span id="help-range-value">${visibleRange}</span>
+        <button id="help-range-inc" style="margin-left:5px;">+</button>
+    </div>
     <div style="margin-top:20px;">
         <button id="close-help-btn" style="padding:10px 24px; font-size:18px; border-radius:8px; border:none; cursor:pointer;">Fechar</button>
     </div>
@@ -491,6 +498,24 @@ window.addEventListener('keydown', (event) => {
         helpDiv.style.display = helpDiv.style.display === 'none' ? 'block' : 'none';
     }
 });
+
+// Sincronizar range do menu com o jogo
+document.getElementById('help-range-dec').onclick = () => {
+    if (visibleRange > 1) {
+        visibleRange--;
+        document.getElementById('help-range-value').innerText = visibleRange;
+        document.getElementById('range-value').innerText = visibleRange;
+        updateChunks();
+    }
+};
+document.getElementById('help-range-inc').onclick = () => {
+    if (visibleRange < 4) {
+        visibleRange++;
+        document.getElementById('help-range-value').innerText = visibleRange;
+        document.getElementById('range-value').innerText = visibleRange;
+        updateChunks();
+    }
+};
 
 function showHeartAbove(object3D) {
     // Cria o elemento do coração
