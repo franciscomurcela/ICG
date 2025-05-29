@@ -603,11 +603,15 @@ helpDiv.style.maxWidth = '90vw';
 helpDiv.style.display = 'block'; // Mostra ao iniciar
 
 helpDiv.innerHTML = `
-    <h2 style="margin-top:0">Bem-vindo à Floresta Interativa!</h2>
+    <h2 style="margin-top:0">Bem-vindo à Floresta Interativa! 🌲</h2>
     <ul style="text-align:left; margin: 20px auto 20px auto; max-width: 400px;">
         <li><b>WASD</b> para mover</li>
         <li><b>Rato</b> para olhar em volta</li>
-        <li><b>E</b> para interagir (apanhar cenouras, alimentar porcos/coelhos)</li>
+        <li><b>E</b> para interagir:</li>
+        <ul>
+            <li>Apanhar <b>cenouras</b> (<span style="color:orange">🥕</span>) e alimentar <b>porcos</b> ou <b>coelhos</b></li>
+            <li>Apanhar <b>bagas</b> (<span style="color:#b9001f">🍒</span>) e alimentar <b>raposas</b></li>
+        </ul>
         <li><b>R</b> para mudar o clima</li>
         <li><b>H</b> para abrir/fechar este menu</li>
         <li><b>Chunks +/-</b> para ajustar o alcance do mundo (menos = mais leve para PC fraco)</li>
