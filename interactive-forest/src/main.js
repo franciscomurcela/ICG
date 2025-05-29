@@ -9,6 +9,7 @@ import { initControls } from './controls/firstPersonControls';
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight, toggleWeather;
 let foodCount = 3; // Começa com 3 cenouras
     
+let visibleRange = 2; 
 let foodDiv;
 
 function updateFoodUI() {
@@ -58,6 +59,38 @@ function init() {
     });
     document.body.appendChild(weatherButton);
 
+    const rangeDiv = document.createElement('div');
+    rangeDiv.style.position = 'absolute';
+    rangeDiv.style.top = '120px';
+    rangeDiv.style.right = '10px';
+    rangeDiv.style.background = 'rgba(0,0,0,0.5)';
+    rangeDiv.style.color = 'white';
+    rangeDiv.style.padding = '8px';
+    rangeDiv.style.borderRadius = '8px';
+    rangeDiv.style.zIndex = 21;
+    rangeDiv.innerHTML = `
+        <span>Chunks: </span>
+        <button id="range-dec" style="margin-right:5px;">-</button>
+        <span id="range-value">${visibleRange}</span>
+        <button id="range-inc" style="margin-left:5px;">+</button>
+    `;
+    document.body.appendChild(rangeDiv);
+
+    document.getElementById('range-dec').onclick = () => {
+        if (visibleRange > 1) {
+            visibleRange--;
+            document.getElementById('range-value').innerText = visibleRange;
+            updateChunks();
+        }
+    };
+    document.getElementById('range-inc').onclick = () => {
+        if (visibleRange < 4) {
+            visibleRange++;
+            document.getElementById('range-value').innerText = visibleRange;
+            updateChunks();
+        }
+    };
+
     foodDiv = document.createElement('div'); // <-- Remove 'const'
     foodDiv.id = 'food-info';
     foodDiv.style.position = 'absolute';
@@ -86,7 +119,6 @@ function updateChunks() {
     const cameraChunkX = Math.floor(cameraParentPosition.x / chunkSize);
     const cameraChunkZ = Math.floor(cameraParentPosition.z / chunkSize);
 
-    const visibleRange = 2;
     const chunksToKeep = new Set();
 
     // Preencher chunksToKeep com os chunks dentro do alcance
