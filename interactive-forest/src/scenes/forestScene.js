@@ -11,6 +11,7 @@ import rainyTexture from '../assets/textures/rainy.jpg'; // Importar o backgroun
 import snowTexture from '../assets/textures/snow.jpg'; // Importar textura de neve
 import pigGLBUrl from '../assets/models/pig.glb';
 import rabbitGLBUrl from '../assets/models/rabbit.glb';
+import foxGLBUrl from '../assets/models/fox.glb';
 
 let isDay = true; // Estado inicial: dia
 let sun; // Variável para armazenar o sol
@@ -421,6 +422,51 @@ function spawnRabbitInChunk(chunkGroup) {
     }
 }
 
+let foxGLTF = null;
+let foxMixers = [];
+
+const foxLoader = new GLTFLoader();
+foxLoader.load(
+    foxGLBUrl,
+    (gltf) => {
+        foxGLTF = gltf;
+        // Faz spawn de raposas em todos os chunks existentes
+        for (const chunkGroup of chunks.values()) {
+            spawnFoxInChunk(chunkGroup);
+        }
+    },
+    undefined,
+    (error) => {
+        console.error('Erro ao carregar a raposa:', error);
+    }
+);
+
+// Função para spawnar raposa num chunk (com animação)
+function spawnFoxInChunk(chunkGroup) {
+    if (foxGLTF && foxGLTF.scene && Math.random() < 0.5) {
+        const chunkSize = 50;
+        const fox = clone(foxGLTF.scene);
+        fox.position.set(
+            Math.random() * chunkSize - chunkSize / 2,
+            +0.1, // <-- Ajuste aqui para garantir que os pés tocam o solo
+            Math.random() * chunkSize - chunkSize / 2
+        );
+        fox.scale.set(3.5, 3.5, 3.5);
+        fox.rotation.y = Math.random() * Math.PI * 2;
+        fox.name = 'Fox_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        chunkGroup.add(fox);
+
+        // Adicionar animação se houver
+        if (foxGLTF.animations && foxGLTF.animations.length > 0) {
+            const mixer = new THREE.AnimationMixer(fox);
+            const action = mixer.clipAction(foxGLTF.animations[0]);
+            action.play();
+            action.timeScale = 1;
+            foxMixers.push(mixer);
+        }
+    }
+}
+
 export function createForestScene() {
     const scene = new THREE.Scene();
 
@@ -600,6 +646,7 @@ export function createForestScene() {
         // SPAWN DO PORCO: só se o modelo já estiver carregado
         spawnPigInChunk(chunkGroup);
         spawnRabbitInChunk(chunkGroup);
+        spawnFoxInChunk(chunkGroup); // <-- ADICIONA ESTA LINHA
 
         // Atualizar folhas e chão do chunk se estiver a nevar
         if (currentWeather === 'snow') {
@@ -646,5 +693,6 @@ export function createForestScene() {
 export {
     rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles,
     treeColliders, pigMixers, rabbitMixers, rabbits, carrots,
-    spawnPigInChunk, spawnRabbitInChunk, rabbitGLTF
+    spawnPigInChunk, spawnRabbitInChunk, rabbitGLTF,
+    foxGLTF, foxMixers, spawnFoxInChunk
 };

@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import {
     createForestScene, rabbitMixer, rabbit, rainParticles, snowParticles,
     pigMixers, rabbitMixers, rabbits, carrots,
-    spawnPigInChunk, spawnRabbitInChunk, rabbitGLTF
+    spawnPigInChunk, spawnRabbitInChunk, rabbitGLTF,
+    foxGLTF, foxMixers, spawnFoxInChunk
 } from './scenes/forestScene';
 import { initControls } from './controls/firstPersonControls';
 
@@ -163,6 +164,7 @@ function updateChunks() {
                     if (rabbitGLTF) {
                         spawnRabbitInChunk(chunkGroup);
                     }
+                    if (foxGLTF) spawnFoxInChunk(chunkGroup);
                 }
                 console.debug(`Chunk criado: ${chunkKey}`);
             }
@@ -258,6 +260,16 @@ function getRabbitMeshes() {
     return rabbits;
 }
 
+function getFoxMeshes() {
+    const foxes = [];
+    scene.traverse(obj => {
+        if (obj.name && obj.name.startsWith('Fox_') && obj.type === 'Group') {
+            foxes.push(obj);
+        }
+    });
+    return foxes;
+}
+
 function animate() {
     requestAnimationFrame(animate);
 
@@ -277,6 +289,7 @@ function animate() {
             r.mesh.rotation.y = Math.atan2(dx, dz);
         });
     }
+    if (foxMixers && foxMixers.length) foxMixers.forEach(mixer => mixer.update(delta));
 
     // --- INTERAÇÃO COM PORCOS E CENOURAS ---
     nearestPig = null;
