@@ -250,9 +250,9 @@ function animate() {
     nearestPig = null;
     nearestCarrot = null;
     nearestRabbit = null;
-    let minDistPig = 2.5;
-    let minDistCarrot = 1.5;
-    let minDistRabbit = 2.5;
+    let minDistPig = 3.5;      // antes: 2.5
+    let minDistCarrot = 3.5;   // antes: 1.5
+    let minDistRabbit = 3.5;   // antes: 2.5
     const playerPos = controls.getCameraParent().position;
 
     // Porcos
@@ -389,6 +389,7 @@ window.addEventListener('keydown', (event) => {
             setTimeout(() => {
                 pig.position.y = originalY;
             }, 400);
+            showHeartAbove(nearestPig); // <-- Adiciona aqui
         } else if (nearestRabbit && foodCount > 0) {
             // Alimentar coelho
             foodCount--;
@@ -406,6 +407,7 @@ window.addEventListener('keydown', (event) => {
                     }
                 }, 4000);
             }
+            showHeartAbove(nearestRabbit); // <-- Adiciona aqui
         }
     }
     if (event.code === 'KeyR') {
@@ -457,6 +459,51 @@ window.addEventListener('keydown', (event) => {
         helpDiv.style.display = helpDiv.style.display === 'none' ? 'block' : 'none';
     }
 });
+
+function showHeartAbove(object3D) {
+    // Cria o elemento do coração
+    const heart = document.createElement('div');
+    heart.innerText = '❤️';
+    heart.style.position = 'absolute';
+    heart.style.fontSize = '36px';
+    heart.style.pointerEvents = 'none';
+    heart.style.transition = 'opacity 0.3s';
+    heart.style.opacity = '1';
+    heart.style.zIndex = 200;
+
+    document.body.appendChild(heart);
+
+    // Atualiza a posição do coração durante 1 segundo
+    let elapsed = 0;
+    const duration = 1000;
+    function updateHeart() {
+        if (!object3D.parent) {
+            heart.remove();
+            return;
+        }
+        // Converter posição 3D para 2D
+        const pos = object3D.position.clone();
+        object3D.getWorldPosition(pos);
+        pos.y += 2; // Ajusta altura acima do animal
+
+        // Projeta para coordenadas de ecrã
+        const vector = pos.project(camera);
+        const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (1 - (vector.y * 0.5 + 0.5)) * window.innerHeight;
+
+        heart.style.left = `${x - 18}px`;
+        heart.style.top = `${y - 48}px`;
+
+        elapsed += 16;
+        if (elapsed < duration) {
+            requestAnimationFrame(updateHeart);
+        } else {
+            heart.style.opacity = '0';
+            setTimeout(() => heart.remove(), 300);
+        }
+    }
+    updateHeart();
+}
 
 init();
 animate();
