@@ -467,6 +467,36 @@ function spawnFoxInChunk(chunkGroup) {
     }
 }
 
+function createBerry(position) {
+    const berryGroup = new THREE.Group();
+
+    // Corpo principal: esfera vermelha (baga)
+    const berryGeometry = new THREE.SphereGeometry(0.09, 16, 16);
+    const berryMaterial = new THREE.MeshStandardMaterial({ color: 0xb9001f });
+    // Cria 3-5 bagas agrupadas
+    const berryCount = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < berryCount; i++) {
+        const berry = new THREE.Mesh(berryGeometry, berryMaterial);
+        berry.position.set(
+            (Math.random() - 0.5) * 0.18,
+            0.09 + Math.random() * 0.05,
+            (Math.random() - 0.5) * 0.18
+        );
+        berryGroup.add(berry);
+    }
+
+    // Pequeno "caule" verde
+    const stemGeometry = new THREE.CylinderGeometry(0.015, 0.015, 0.08, 8);
+    const stemMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+    const stem = new THREE.Mesh(stemGeometry, stemMaterial);
+    stem.position.y = 0.18;
+    berryGroup.add(stem);
+
+    berryGroup.position.add(position);
+    berryGroup.name = 'Berry_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    return berryGroup;
+}
+
 export function createForestScene() {
     const scene = new THREE.Scene();
 
@@ -637,6 +667,19 @@ export function createForestScene() {
             const carrot = createCarrot(pos);
             chunkGroup.add(carrot);
             carrots.push(carrot);
+        }
+
+        // Adicionar bagas colecionáveis ao chunk
+        for (let i = 0; i < 2; i++) { // 2 bagas por chunk (ajusta como quiseres)
+            const pos = new THREE.Vector3(
+                Math.random() * chunkSize - chunkSize / 2,
+                0,
+                Math.random() * chunkSize - chunkSize / 2
+            );
+            const berry = createBerry(pos);
+            chunkGroup.add(berry);
+            // (Opcional) Adiciona a um array global se quiseres controlar as bagas
+            // berries.push(berry);
         }
 
         // Adicionar o grupo do chunk à cena

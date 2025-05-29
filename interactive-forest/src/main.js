@@ -9,12 +9,18 @@ import { initControls } from './controls/firstPersonControls';
 
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight, toggleWeather;
 let foodCount = 3; // Começa com 3 cenouras
+let berryCount = 3; // Novo: contador de bagas
     
 let visibleRange = 2; 
 let foodDiv;
 
 function updateFoodUI() {
     foodDiv.innerText = `🥕 ${foodCount}`;
+}
+
+let berryDiv;
+function updateBerryUI() {
+    berryDiv.innerText = `🍒 ${berryCount}`;
 }
 
 function init() {
@@ -106,6 +112,20 @@ function init() {
     foodDiv.innerText = `🥕 ${foodCount}`;
     document.body.appendChild(foodDiv);
 
+    berryDiv = document.createElement('div');
+    berryDiv.id = 'berry-info';
+    berryDiv.style.position = 'absolute';
+    berryDiv.style.top = '60px';
+    berryDiv.style.right = '10px';
+    berryDiv.style.color = '#b9001f';
+    berryDiv.style.fontSize = '20px';
+    berryDiv.style.background = 'rgba(0,0,0,0.5)';
+    berryDiv.style.padding = '8px';
+    berryDiv.style.borderRadius = '8px';
+    berryDiv.style.zIndex = 20;
+    berryDiv.innerText = `🍒 ${berryCount}`;
+    document.body.appendChild(berryDiv);
+
     window.addEventListener('resize', onWindowResize, false);
 }
 
@@ -192,6 +212,22 @@ let interactionDiv, messageTimeout;
 let nearestPig = null;
 let nearestCarrot = null; // NOVO
 let nearestRabbit = null;
+let nearestBerry = null;
+let nearestFox = null;
+let minDistFox = 3.5;
+const foxes = getFoxMeshes();
+for (const fox of foxes) {
+    const foxWorldPos = new THREE.Vector3();
+    fox.getWorldPosition(foxWorldPos);
+    const dx = playerPos.x - foxWorldPos.x;
+    const dz = playerPos.z - foxWorldPos.z;
+    const distXZ = Math.sqrt(dx * dx + dz * dz);
+    if (distXZ < minDistFox) {
+        minDistFox = distXZ;
+        nearestFox = fox;
+    }
+}
+let minDistBerry = 3.5;
 
 // Cria a caixa de interação (apenas uma vez)
 function createInteractionUI() {
@@ -261,6 +297,7 @@ function getRabbitMeshes() {
 }
 
 function getFoxMeshes() {
+    if (!scene) return [];
     const foxes = [];
     scene.traverse(obj => {
         if (obj.name && obj.name.startsWith('Fox_') && obj.type === 'Group') {
@@ -268,6 +305,16 @@ function getFoxMeshes() {
         }
     });
     return foxes;
+}
+
+function getBerryMeshes() {
+    const berries = [];
+    scene.traverse(obj => {
+        if (obj.name && obj.name.startsWith('Berry_')) {
+            berries.push(obj);
+        }
+    });
+    return berries;
 }
 
 function animate() {
@@ -295,6 +342,7 @@ function animate() {
     nearestPig = null;
     nearestCarrot = null;
     nearestRabbit = null;
+    nearestBerry = null;
     let minDistPig = 3.5;      // antes: 2.5
     let minDistCarrot = 3.5;   // antes: 1.5
     let minDistRabbit = 3.5;   // antes: 2.5
@@ -354,15 +402,53 @@ function animate() {
         }
     }
 
+    // Bagas (novo)
+    const berries = getBerryMeshes();
+    nearestBerry = null;
+    let minDistBerry = 3.5;
+    for (const berry of berries) {
+        const berryWorldPos = new THREE.Vector3();
+        berry.getWorldPosition(berryWorldPos);
+        const dx = playerPos.x - berryWorldPos.x;
+        const dz = playerPos.z - berryWorldPos.z;
+        const distXZ = Math.sqrt(dx * dx + dz * dz);
+        if (distXZ < minDistBerry) {
+            minDistBerry = distXZ;
+            nearestBerry = berry;
+        }
+    }
+
+    // Raposas
+    const foxes = getFoxMeshes();
+    nearestFox = null;
+    let minDistFox = 3.5;
+    for (const fox of foxes) {
+        const foxWorldPos = new THREE.Vector3();
+        fox.getWorldPosition(foxWorldPos);
+        const dx = playerPos.x - foxWorldPos.x;
+        const dz = playerPos.z - foxWorldPos.z;
+        const distXZ = Math.sqrt(dx * dx + dz * dz);
+        if (distXZ < minDistFox) {
+            minDistFox = distXZ;
+            nearestFox = fox;
+        }
+    }
+
     // Mostrar UI de interação
     if (nearestCarrot) {
         interactionDiv.innerHTML = "<b>E</b> para apanhar cenoura";
         interactionDiv.style.display = 'block';
-    } else if (nearestPig) {
+    } else if (nearestBerry) {
+        interactionDiv.innerHTML = "<b>E</b> para apanhar baga";
+        interactionDiv.style.display = 'block';
+    } else if (nearestPig && foodCount > 0) {
         interactionDiv.innerHTML = "<b>E</b> para alimentar porco";
         interactionDiv.style.display = 'block';
-    } else if (nearestRabbit) {
+    } else if (nearestRabbit && foodCount > 0) {
         interactionDiv.innerHTML = "<b>E</b> para alimentar coelho";
+        interactionDiv.style.display = 'block';
+    } else if (nearestFox && berryCount > 0) {
+        interactionDiv.innerHTML = "<b>E</b> para alimentar raposa";
         interactionDiv.style.display = 'block';
     } else {
         interactionDiv.style.display = 'none';
@@ -423,36 +509,74 @@ window.addEventListener('keydown', (event) => {
             foodCount++;
             updateFoodUI();
             showMessage('Apanhaste uma cenoura!');
+        } else if (nearestBerry) {
+            // Apanhar baga
+            if (nearestBerry.parent) nearestBerry.parent.remove(nearestBerry);
+            berryCount++;
+            updateBerryUI();
+            showMessage('Apanhaste uma baga!');
         } else if (nearestPig && foodCount > 0) {
             // Alimentar porco
             foodCount--;
             updateFoodUI();
             showMessage('Porco alimentado');
-            const pig = nearestPig; // Guarda referência ao porco atual
+            const pig = nearestPig;
             const originalY = pig.position.y;
             pig.position.y = originalY + 1;
-            setTimeout(() => {
-                pig.position.y = originalY;
-            }, 400);
-            showHeartAbove(nearestPig); // <-- Adiciona aqui
+            setTimeout(() => { pig.position.y = originalY; }, 400);
+            showHeartAbove(nearestPig);
         } else if (nearestRabbit && foodCount > 0) {
             // Alimentar coelho
             foodCount--;
             updateFoodUI();
             showMessage('Coelho alimentado!');
-            // Aumentar velocidade do coelho
             if (nearestRabbit.userData && nearestRabbit.userData.speed) {
-                const rabbit = nearestRabbit; // Guarda referência ao coelho atual
+                const rabbit = nearestRabbit;
                 const originalSpeed = rabbit.userData.speed;
                 rabbit.userData.speed = originalSpeed * 2.5;
                 setTimeout(() => {
-                    // Verifica se o coelho ainda existe antes de restaurar
-                    if (rabbit.userData) {
-                        rabbit.userData.speed = originalSpeed;
-                    }
+                    if (rabbit.userData) rabbit.userData.speed = originalSpeed;
                 }, 4000);
             }
-            showHeartAbove(nearestRabbit); // <-- Adiciona aqui
+            showHeartAbove(nearestRabbit);
+        } else {
+            // Alimentar raposa (só se houver raposa próxima e bagas)
+            let nearestFox = null;
+            let minDistFox = 3.5;
+            const foxes = getFoxMeshes();
+            const playerPos = controls.getCameraParent().position;
+            for (const fox of foxes) {
+                const foxWorldPos = new THREE.Vector3();
+                fox.getWorldPosition(foxWorldPos);
+                const dx = playerPos.x - foxWorldPos.x;
+                const dz = playerPos.z - foxWorldPos.z;
+                const distXZ = Math.sqrt(dx * dx + dz * dz);
+                if (distXZ < minDistFox) {
+                    minDistFox = distXZ;
+                    nearestFox = fox;
+                }
+            }
+            if (nearestFox && berryCount > 0 && minDistFox < 3.5) {
+                berryCount--;
+                updateBerryUI();
+                showMessage('Raposa alimentada!');
+                showHeartAbove(nearestFox);
+
+                // Rodar sobre o eixo Y (dança)
+                let spinProgress = 0;
+                const spinDuration = 600; // ms
+                const initialY = nearestFox.rotation.y;
+                function doSpin() {
+                    spinProgress += 16;
+                    nearestFox.rotation.y = initialY + Math.PI * 2 * (spinProgress / spinDuration);
+                    if (spinProgress < spinDuration) {
+                        requestAnimationFrame(doSpin);
+                    } else {
+                        nearestFox.rotation.y = initialY;
+                    }
+                }
+                doSpin();
+            }
         }
     }
     if (event.code === 'KeyR') {
