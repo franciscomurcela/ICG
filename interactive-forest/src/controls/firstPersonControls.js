@@ -5,12 +5,12 @@ let camera, cameraParent;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 const velocity = new Vector3();
 const direction = new Vector3();
-let rotation = { x: 0, y: 0 }; // Armazena a rotação da câmera
-let isJumping = false; // Indica se o jogador está no ar
-let jumpTime = 0; // Tempo acumulado para o salto
-const jumpDuration = 0.6; // Duração total do salto (em segundos)
-const jumpHeight = 2; // Altura máxima do salto
-const baseHeight = 0.5; // Altura inicial da câmera (base no solo)
+let rotation = { x: 0, y: 0 };
+let isJumping = false;
+let jumpTime = 0;
+const jumpDuration = 0.6; 
+const jumpHeight = 2; 
+const baseHeight = 0.5;
 
 export function initControls(cam) {
     camera = cam;
@@ -32,16 +32,14 @@ export function initControls(cam) {
 
     return {
         update: updateControls,
-        getCameraParent: () => cameraParent, // Retorna o objeto pai para ser adicionado à cena
+        getCameraParent: () => cameraParent, 
     };
 }
 
 function onPointerLockChange() {
     if (document.pointerLockElement !== document.querySelector('canvas')) {
-        // Liberar o bloqueio do mouse
         document.removeEventListener('mousemove', onMouseMove);
     } else {
-        // Reativar o movimento do mouse
         document.addEventListener('mousemove', onMouseMove);
     }
 }
@@ -64,13 +62,13 @@ function onKeyDown(event) {
         case 'KeyD':
             moveRight = true;
             break;
-        case 'Space': // Salto
+        case 'Space':
             if (!isJumping) {
                 isJumping = true;
-                jumpTime = 0; // Reiniciar o tempo do salto
+                jumpTime = 0; 
             }
             break;
-        case 'Escape': // Liberar o Pointer Lock ao pressionar Esc
+        case 'Escape':
             document.exitPointerLock();
             break;
     }
@@ -99,21 +97,19 @@ function onKeyUp(event) {
 
 function onMouseMove(event) {
     if (document.pointerLockElement === document.querySelector('canvas')) {
-        const sensitivity = 0.002; // Sensibilidade do mouse
+        const sensitivity = 0.002; 
         rotation.y -= event.movementX * sensitivity;
         rotation.x -= event.movementY * sensitivity;
 
-        // Limitar a rotação vertical para evitar inclinação
         rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotation.x));
     }
 }
 
 function updateControls(delta) {
-    const speed = 25; // Velocidade de movimento
+    const speed = 25;
 
-    // Atualizar a rotação
-    camera.rotation.x = rotation.x; // Rotação vertical
-    cameraParent.rotation.y = rotation.y; // Rotação horizontal
+    camera.rotation.x = rotation.x; 
+    cameraParent.rotation.y = rotation.y; 
 
     // Calcular direção do movimento
     direction.z = Number(moveBackward) - Number(moveForward);
@@ -144,7 +140,6 @@ function updateControls(delta) {
         cameraParent.position.copy(nextPosition);
     }
 
-    // Simular salto usando função sin
     if (isJumping) {
         jumpTime += delta; // Incrementar o tempo do salto
         const progress = jumpTime / jumpDuration; // Progresso do salto (0 a 1)
@@ -160,7 +155,6 @@ function updateControls(delta) {
             jumpTime = 0; // Resetar o tempo do salto
         }
     } else {
-        // Garantir que a altura base seja mantida quando não estiver saltando
         cameraParent.position.y = baseHeight;
     }
 }

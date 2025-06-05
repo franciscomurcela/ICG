@@ -7,8 +7,8 @@ module.exports = {
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
-        clean: true, // Limpa a pasta dist antes de cada build
-        publicPath: './', // Caminhos relativos para GitHub Pages
+        clean: true, 
+        publicPath: './', 
     },
     module: {
         rules: [
@@ -28,10 +28,14 @@ module.exports = {
             },
             {
                 test: /\.(png|jpg|jpeg|gif|svg)$/,
-                type: 'asset/resource', // Substitui o uso do file-loader
+                type: 'asset/resource',
             },
             {
                 test: /\.(glb|gltf)$/,
+                type: 'asset/resource',
+            },
+            {
+                test: /\.(mp3|wav|ogg)$/,
                 type: 'asset/resource',
             },
         ],
@@ -42,12 +46,12 @@ module.exports = {
         },
         compress: true,
         port: 9000,
-        open: true, // Abre o navegador automaticamente
+        open: true, 
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: './src/index.html', // Usa o arquivo index.html da pasta src
-            inject: true, // Injeta automaticamente os arquivos CSS e JS
+            template: './src/index.html',
+            inject: true, 
         }),
     ],
     resolve: {

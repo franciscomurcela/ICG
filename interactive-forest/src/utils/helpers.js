@@ -7,27 +7,25 @@ function getRandomInt(min, max) {
 function createTree(position, scale) {
     const tree = new THREE.Group();
 
-    // Tronco grosso e alto
-    const trunkHeight = 4 * scale; // Altura do tronco
-    const trunkRadius = 0.8 * scale; // Raio do tronco
+    const trunkHeight = 4 * scale;
+    const trunkRadius = 0.8 * scale; 
     const trunkGeometry = new THREE.CylinderGeometry(trunkRadius, trunkRadius, trunkHeight);
-    const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); // Cor marrom
+    const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); 
     const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-    trunk.position.y = trunkHeight / 2; // Elevar o tronco para que fique acima do solo
-    trunk.castShadow = true; // Habilitar sombras para o tronco
+    trunk.position.y = trunkHeight / 2; 
+    trunk.castShadow = true; 
     trunk.receiveShadow = true;
 
-    // Folhas mais realistas usando múltiplos cones
-    const foliageMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 }); // Cor verde
-    const foliageLayers = 3; // Número de camadas de folhas
-    const foliageHeight = 2.5 * scale; // Altura de cada camada de folhas
-    const foliageRadius = 3 * scale; // Raio da base da camada inferior
+    const foliageMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 }); 
+    const foliageLayers = 3; 
+    const foliageHeight = 2.5 * scale; 
+    const foliageRadius = 3 * scale; 
 
     for (let i = 0; i < foliageLayers; i++) {
-        const layerScale = 1 - i * 0.3; // Reduzir o tamanho de cada camada superior
+        const layerScale = 1 - i * 0.3;
         const coneGeometry = new THREE.ConeGeometry(foliageRadius * layerScale, foliageHeight, 6);
         const cone = new THREE.Mesh(coneGeometry, foliageMaterial);
-        cone.position.y = trunkHeight + foliageHeight * i; // Empilhar as camadas acima do tronco
+        cone.position.y = trunkHeight + foliageHeight * i; 
         cone.receiveShadow = true;
         tree.add(cone);
     }
@@ -42,7 +40,6 @@ function createTree(position, scale) {
 }
 
 function createRock(position, scale) {
-    // Escolher uma forma aleatória para a pedra
     const geometries = [
         new THREE.DodecahedronGeometry(scale), // Forma irregular
         new THREE.SphereGeometry(scale, 8, 8), // Esfera
@@ -55,19 +52,19 @@ function createRock(position, scale) {
 
     // Posicionar a pedra
     rock.position.copy(position);
-    rock.castShadow = true; // Habilitar sombras para a pedra
+    rock.castShadow = true; 
     rock.receiveShadow = true;
 
     return rock;
 }
 
 function createRealisticGrassPatch(position, patchSize, density, grassTexture) {
-    const grassGroup = new THREE.Group(); // Grupo para agrupar os planos de relva
+    const grassGroup = new THREE.Group(); 
     const grassMaterial = new THREE.MeshStandardMaterial({
         map: grassTexture,
-        transparent: true, // Permitir transparência
-        alphaTest: 0.5, // Ignorar pixels transparentes
-        side: THREE.DoubleSide, // Renderizar ambos os lados
+        transparent: true, 
+        alphaTest: 0.5, 
+        side: THREE.DoubleSide, 
     });
 
     for (let i = 0; i < density; i++) {
@@ -75,7 +72,7 @@ function createRealisticGrassPatch(position, patchSize, density, grassTexture) {
         const z = Math.random() * patchSize - patchSize / 2;
         const yRotation = Math.random() * Math.PI * 2;
 
-        const grassGeometry = new THREE.PlaneGeometry(1, 2); // Cada folha de relva
+        const grassGeometry = new THREE.PlaneGeometry(1, 2); 
         const grass = new THREE.Mesh(grassGeometry, grassMaterial);
         grass.position.set(position.x + x, position.y, position.z + z);
         grass.rotation.y = yRotation;

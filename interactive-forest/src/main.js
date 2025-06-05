@@ -6,10 +6,14 @@ import {
     foxGLTF, foxMixers, spawnFoxInChunk
 } from './scenes/forestScene';
 import { initControls } from './controls/firstPersonControls';
+import bgMusicUrl from './assets/sounds/background.mp3';
+import foxSfxUrl from './assets/sounds/fox.mp3';
+import pigSfxUrl from './assets/sounds/pig.mp3';
+import rabbitSfxUrl from './assets/sounds/rabbit.mp3';
 
 let scene, camera, renderer, controls, clock, createChunk, chunkSize, chunks, toggleDayNight, toggleWeather;
-let foodCount = 3; // Começa com 3 cenouras
-let berryCount = 3; // Novo: contador de bagas
+let foodCount = 3; 
+let berryCount = 3; 
     
 let visibleRange = 2; 
 let foodDiv;
@@ -30,7 +34,7 @@ function init() {
     chunkSize = forestScene.chunkSize;
     chunks = forestScene.chunks;
     toggleDayNight = forestScene.toggleDayNight;
-    toggleWeather = forestScene.toggleWeather; // <-- Atribui aqui
+    toggleWeather = forestScene.toggleWeather;
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
     camera.position.set(0, 1.6, 0);
@@ -53,7 +57,7 @@ function init() {
     const weatherButton = document.createElement('button');
     weatherButton.innerText = 'Toggle Weather';
     weatherButton.style.position = 'absolute';
-    weatherButton.style.top = '110px'; // Estava '50px', aumenta para 60px ou mais
+    weatherButton.style.top = '110px'; 
     weatherButton.style.right = '10px';
     weatherButton.style.padding = '10px';
     weatherButton.style.background = 'rgba(0, 0, 0, 0.5)';
@@ -62,7 +66,7 @@ function init() {
     weatherButton.style.borderRadius = '5px';
     weatherButton.style.cursor = 'pointer';
     weatherButton.addEventListener('click', () => {
-        toggleWeather(); // Chamar toggleWeather
+        toggleWeather(); 
     });
     document.body.appendChild(weatherButton);
 
@@ -98,7 +102,7 @@ function init() {
         }
     };
 
-    foodDiv = document.createElement('div'); // <-- Remove 'const'
+    foodDiv = document.createElement('div'); 
     foodDiv.id = 'food-info';
     foodDiv.style.position = 'absolute';
     foodDiv.style.top = '20px';
@@ -172,7 +176,6 @@ function updateChunks() {
         }
     }
 
-    // Gerar novos chunks ao redor da posição atual da câmera
     for (let x = cameraChunkX - visibleRange; x <= cameraChunkX + visibleRange; x++) {
         for (let z = cameraChunkZ - visibleRange; z <= cameraChunkZ + visibleRange; z++) {
             const chunkKey = `${x},${z}`;
@@ -191,11 +194,9 @@ function updateChunks() {
         }
     }
 
-    // Limpar coelhos cujos meshes já não estão na cena OU cujo chunk foi removido
     if (rabbits && rabbits.length) {
         for (let i = rabbits.length - 1; i >= 0; i--) {
             const rabbit = rabbits[i];
-            // Remove se o mesh não tem parent (já não está na cena) OU se o chunkGroup já não está em chunks
             if (
                 !rabbit.mesh.parent ||
                 ![...chunks.values()].includes(rabbit.chunkGroup)
@@ -206,11 +207,11 @@ function updateChunks() {
     }
 }
 
-let rabbitAngle = 0; // Ângulo para o movimento circular
+let rabbitAngle = 0;
 
 let interactionDiv, messageTimeout;
 let nearestPig = null;
-let nearestCarrot = null; // NOVO
+let nearestCarrot = null; 
 let nearestRabbit = null;
 let nearestBerry = null;
 let nearestFox = null;
@@ -229,7 +230,6 @@ for (const fox of foxes) {
 }
 let minDistBerry = 3.5;
 
-// Cria a caixa de interação (apenas uma vez)
 function createInteractionUI() {
     interactionDiv = document.createElement('div');
     interactionDiv.id = 'interaction-ui';
@@ -244,18 +244,17 @@ function createInteractionUI() {
     interactionDiv.style.borderRadius = '8px';
     interactionDiv.style.display = 'none';
     interactionDiv.style.zIndex = 30;
-    interactionDiv.innerHTML = ""; // Vai ser atualizado dinamicamente
+    interactionDiv.innerHTML = ""; 
     document.body.appendChild(interactionDiv);
 }
 createInteractionUI();
 
-// Cria a caixa de mensagem
 const messageDiv = document.createElement('div');
 messageDiv.id = 'message-ui';
 messageDiv.style.position = 'absolute';
-messageDiv.style.top = '80px'; // <-- No topo do ecrã
+messageDiv.style.top = '80px'; 
 messageDiv.style.left = '50%';
-messageDiv.style.transform = 'translateX(-50%)'; // <-- Só centrar horizontalmente
+messageDiv.style.transform = 'translateX(-50%)';
 messageDiv.style.padding = '14px 24px';
 messageDiv.style.background = 'rgba(0,0,0,0.8)';
 messageDiv.style.color = '#fff';
@@ -275,7 +274,6 @@ function showMessage(text) {
 }
 
 function getPigMeshes() {
-    // Só retorna os meshes principais dos porcos (não filhos internos)
     const pigs = [];
     scene.traverse(obj => {
         if (obj.name && obj.name.startsWith('Pig_') && obj.type === 'Group') {
@@ -286,7 +284,6 @@ function getPigMeshes() {
 }
 
 function getRabbitMeshes() {
-    // Só retorna os meshes principais dos coelhos (não filhos internos)
     const rabbits = [];
     scene.traverse(obj => {
         if (obj.name && obj.name.startsWith('Rabbit_') && obj.type === 'Group') {
@@ -317,6 +314,26 @@ function getBerryMeshes() {
     return berries;
 }
 
+let bgMusic = new Audio(bgMusicUrl);
+bgMusic.loop = true;
+bgMusic.volume = 0.5;
+
+function playFoxSfx() {
+    const sfx = new Audio(foxSfxUrl);
+    sfx.volume = 0.7;
+    sfx.play();
+}
+function playPigSfx() {
+    const sfx = new Audio(pigSfxUrl);
+    sfx.volume = 0.7;
+    sfx.play();
+}
+function playRabbitSfx() {
+    const sfx = new Audio(rabbitSfxUrl);
+    sfx.volume = 0.7;
+    sfx.play();
+}
+
 function animate() {
     requestAnimationFrame(animate);
 
@@ -343,9 +360,9 @@ function animate() {
     nearestCarrot = null;
     nearestRabbit = null;
     nearestBerry = null;
-    let minDistPig = 3.5;      // antes: 2.5
-    let minDistCarrot = 3.5;   // antes: 1.5
-    let minDistRabbit = 3.5;   // antes: 2.5
+    let minDistPig = 3.5;      
+    let minDistCarrot = 3.5;   
+    let minDistRabbit = 3.5;   
     const playerPos = controls.getCameraParent().position;
 
     // Porcos
@@ -391,7 +408,7 @@ function animate() {
             nearestRabbit = rabbit;
         }
 
-        // Movimento circular (já existente)
+        // Movimento circular
         if (rabbit.userData && rabbit.userData.radius) {
             rabbit.userData.angle += delta * rabbit.userData.speed;
             rabbit.position.x = rabbit.userData.centerX + Math.cos(rabbit.userData.angle) * rabbit.userData.radius - rabbit.parent.position.x;
@@ -402,7 +419,7 @@ function animate() {
         }
     }
 
-    // Bagas (novo)
+    // Bagas
     const berries = getBerryMeshes();
     nearestBerry = null;
     let minDistBerry = 3.5;
@@ -454,7 +471,6 @@ function animate() {
         interactionDiv.style.display = 'none';
     }
 
-    // --- NOVO: manter chuva e neve centradas no utilizador ---
     const cameraPos = controls.getCameraParent().position;
     if (rainParticles && scene.children.includes(rainParticles)) {
         rainParticles.position.set(cameraPos.x, 0, cameraPos.z);
@@ -470,7 +486,6 @@ function animate() {
         for (let i = 0; i < pos.count; i++) {
             pos.array[i * 3 + 1] += vel.array[i * 3 + 1];
             if (pos.array[i * 3 + 1] < 0) {
-                // Quando a gota chega ao chão, reinicia em cima e randomiza X e Z à volta do utilizador
                 pos.array[i * 3 + 1] = Math.random() * 20 + 5;
                 pos.array[i * 3 + 0] = (Math.random() * 1000 - 500) + cameraPos.x;
                 pos.array[i * 3 + 2] = (Math.random() * 1000 - 500) + cameraPos.z;
@@ -502,7 +517,6 @@ function animate() {
 window.addEventListener('keydown', (event) => {
     if (event.code === 'KeyE') {
         if (nearestCarrot) {
-            // Apanhar cenoura
             if (nearestCarrot.parent) nearestCarrot.parent.remove(nearestCarrot);
             const idx = carrots.indexOf(nearestCarrot);
             if (idx !== -1) carrots.splice(idx, 1);
@@ -510,26 +524,25 @@ window.addEventListener('keydown', (event) => {
             updateFoodUI();
             showMessage('Apanhaste uma cenoura!');
         } else if (nearestBerry) {
-            // Apanhar baga
             if (nearestBerry.parent) nearestBerry.parent.remove(nearestBerry);
             berryCount++;
             updateBerryUI();
             showMessage('Apanhaste uma baga!');
         } else if (nearestPig && foodCount > 0) {
-            // Alimentar porco
             foodCount--;
             updateFoodUI();
             showMessage('Porco alimentado');
+            playPigSfx();
             const pig = nearestPig;
             const originalY = pig.position.y;
             pig.position.y = originalY + 1;
             setTimeout(() => { pig.position.y = originalY; }, 400);
             showHeartAbove(nearestPig);
         } else if (nearestRabbit && foodCount > 0) {
-            // Alimentar coelho
             foodCount--;
             updateFoodUI();
             showMessage('Coelho alimentado!');
+            playRabbitSfx();
             if (nearestRabbit.userData && nearestRabbit.userData.speed) {
                 const rabbit = nearestRabbit;
                 const originalSpeed = rabbit.userData.speed;
@@ -540,7 +553,6 @@ window.addEventListener('keydown', (event) => {
             }
             showHeartAbove(nearestRabbit);
         } else {
-            // Alimentar raposa (só se houver raposa próxima e bagas)
             let nearestFox = null;
             let minDistFox = 3.5;
             const foxes = getFoxMeshes();
@@ -560,11 +572,11 @@ window.addEventListener('keydown', (event) => {
                 berryCount--;
                 updateBerryUI();
                 showMessage('Raposa alimentada!');
+                playFoxSfx();
                 showHeartAbove(nearestFox);
 
-                // Rodar sobre o eixo Y (dança)
                 let spinProgress = 0;
-                const spinDuration = 600; // ms
+                const spinDuration = 600;
                 const initialY = nearestFox.rotation.y;
                 function doSpin() {
                     spinProgress += 16;
@@ -600,7 +612,7 @@ helpDiv.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)';
 helpDiv.style.zIndex = 100;
 helpDiv.style.textAlign = 'center';
 helpDiv.style.maxWidth = '90vw';
-helpDiv.style.display = 'block'; // Mostra ao iniciar
+helpDiv.style.display = 'block';
 
 helpDiv.innerHTML = `
     <h2 style="margin-top:0">Bem-vindo à Floresta Interativa! 🌲</h2>
@@ -631,12 +643,17 @@ document.body.appendChild(helpDiv);
 // Botão para fechar o menu
 document.getElementById('close-help-btn').onclick = () => {
     helpDiv.style.display = 'none';
+    if (bgMusic.paused) bgMusic.play();
 };
 
 // Atalho para abrir/fechar o menu com 'H'
 window.addEventListener('keydown', (event) => {
     if (event.code === 'KeyH') {
-        helpDiv.style.display = helpDiv.style.display === 'none' ? 'block' : 'none';
+        const wasVisible = helpDiv.style.display !== 'none';
+        helpDiv.style.display = wasVisible ? 'none' : 'block';
+        if (wasVisible && bgMusic.paused) {
+            bgMusic.play();
+        }
     }
 });
 
@@ -659,7 +676,6 @@ document.getElementById('help-range-inc').onclick = () => {
 };
 
 function showHeartAbove(object3D) {
-    // Cria o elemento do coração
     const heart = document.createElement('div');
     heart.innerText = '❤️';
     heart.style.position = 'absolute';

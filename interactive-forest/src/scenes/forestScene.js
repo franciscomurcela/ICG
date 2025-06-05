@@ -13,20 +13,19 @@ import pigGLBUrl from '../assets/models/pig.glb';
 import rabbitGLBUrl from '../assets/models/rabbit.glb';
 import foxGLBUrl from '../assets/models/fox.glb';
 
-let isDay = true; // Estado inicial: dia
-let sun; // Variável para armazenar o sol
-let stars; // Variável para armazenar as estrelas
-let moon; // Variável para armazenar a lua
-let moonShadow; // Variável para armazenar a sombra da lua
-let currentWeather = 'clear'; // Estado inicial do clima
+let isDay = true;
+let sun; 
+let stars; 
+let moon; 
+let moonShadow; 
+let currentWeather = 'clear'; 
 let rabbitMixer = null;
-let rabbit = null; // <-- Adiciona esta linha
-let rabbitAngle = 0; // Ângulo para o movimento circular
+let rabbit = null;
+let rabbitAngle = 0; 
 let rainParticles = null;
 let snowParticles = null;
-let carrots = []; // Array global para cenouras
+let carrots = []; 
 
-// Estados possíveis: 'day', 'night', 'rain', 'snow'
 let weatherIndex = 0;
 const weatherStates = ['day', 'night', 'rain', 'snow'];
 
@@ -34,34 +33,31 @@ function toggleDayNight(scene, ambientLight, directionalLight, backgroundDay, ba
     isDay = !isDay;
 
     if (isDay) {
-        // Configurações para o dia
         ambientLight.intensity = 0.5;
-        directionalLight.intensity = 1.5; // Luz mais intensa para o dia
-        directionalLight.color.set(0xffffff); // Luz branca para o dia
-        directionalLight.castShadow = true; // Habilitar sombras
-        scene.background = backgroundDay; // Fundo diurno
-        sun.visible = true; // Mostrar o sol
-        moon.visible = false; // Ocultar a lua
-        moonShadow.visible = false; // Ocultar a sombra da lua
-        stars.visible = false; // Ocultar as estrelas
+        directionalLight.intensity = 1.5;
+        directionalLight.color.set(0xffffff); 
+        directionalLight.castShadow = true; 
+        scene.background = backgroundDay; 
+        sun.visible = true;
+        moon.visible = false;
+        moonShadow.visible = false;
+        stars.visible = false;
     } else {
-        // Configurações para a noite
         ambientLight.intensity = 0.2;
-        directionalLight.intensity = 0.3; // Intensidade mais baixa para a noite
-        directionalLight.color.set(0x87CEEB); // Cor azul clara para a luz da lua
-        directionalLight.castShadow = false; // Desativar sombras para suavizar o efeito
-        scene.background = backgroundNight; // Fundo noturno
-        sun.visible = false; // Ocultar o sol
-        moon.visible = true; // Mostrar a lua
-        moonShadow.visible = true; // Mostrar a sombra da lua
-        stars.visible = true; // Mostrar as estrelas
+        directionalLight.intensity = 0.3; 
+        directionalLight.color.set(0x87CEEB); 
+        directionalLight.castShadow = false; 
+        scene.background = backgroundNight; 
+        sun.visible = false;
+        moon.visible = true;
+        moonShadow.visible = true;
+        stars.visible = true;
     }
 }
 
 function setTerrainTexture(isSnow) {
     for (const chunkGroup of chunks.values()) {
         chunkGroup.children.forEach(obj => {
-            // Terreno (PlaneGeometry)
             if (
                 obj.isMesh &&
                 obj.geometry &&
@@ -76,8 +72,7 @@ function setTerrainTexture(isSnow) {
 }
 
 function setWeather(state, scene, ambientLight, directionalLight, backgroundDay, backgroundNight, backgroundRainy) {
-    currentWeather = state; // <-- Adiciona isto!
-    // Remove partículas de chuva/neve sempre que muda de clima
+    currentWeather = state; 
     if (rainParticles) scene.remove(rainParticles);
     if (snowParticles) scene.remove(snowParticles);
 
@@ -153,27 +148,27 @@ function nextWeather(scene, ambientLight, directionalLight, backgroundDay, backg
 }
 
 function createStars() {
-    const starCount = 500; // Número de estrelas
+    const starCount = 500;
     const starGeometry = new THREE.BufferGeometry();
     const starMaterial = new THREE.PointsMaterial({
-        color: 0xffffff, // Cor branca para as estrelas
-        size: 1, // Tamanho das estrelas
-        sizeAttenuation: true, // Permitir que o tamanho diminua com a distância
+        color: 0xffffff,
+        size: 1, 
+        sizeAttenuation: true, 
     });
 
     // Gerar posições aleatórias para as estrelas
     const positions = [];
     for (let i = 0; i < starCount; i++) {
-        const x = Math.random() * 2000 - 1000; // Posição aleatória no eixo X
-        const y = Math.random() * 1000 + 500; // Posição aleatória no eixo Y (acima do horizonte)
-        const z = Math.random() * 2000 - 1000; // Posição aleatória no eixo Z
+        const x = Math.random() * 2000 - 1000; 
+        const y = Math.random() * 1000 + 500; 
+        const z = Math.random() * 2000 - 1000;
         positions.push(x, y, z);
     }
 
     starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 
     const stars = new THREE.Points(starGeometry, starMaterial);
-    stars.visible = false; // Inicialmente invisível (apenas visível à noite)
+    stars.visible = false;
     return stars;
 }
 
@@ -183,14 +178,13 @@ function createRainParticles() {
     const positions = [];
     const velocities = [];
 
-    // Área ampla (como antes), mas mais baixa (Y: 5 a 25)
     for (let i = 0; i < rainCount; i++) {
         positions.push(
-            Math.random() * 1000 - 500, // X: -500 a 500 (área grande)
-            Math.random() * 20 + 5,     // Y: 5 a 25 (mais baixo)
-            Math.random() * 1000 - 500  // Z: -500 a 500 (área grande)
+            Math.random() * 1000 - 500,
+            Math.random() * 20 + 5,     
+            Math.random() * 1000 - 500  
         );
-        velocities.push(0, -Math.random() * 2.5 - 2.5, 0); // velocidade Y negativa, mais rápida
+        velocities.push(0, -Math.random() * 2.5 - 2.5, 0); 
     }
 
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
@@ -209,13 +203,11 @@ function createRainParticles() {
 function createCarrot(position) {
     const carrotGroup = new THREE.Group();
 
-    // Corpo da cenoura (cone laranja invertido)
     const bodyGeometry = new THREE.ConeGeometry(0.15, 0.5, 16);
     const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xffa500 });
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    body.rotation.x = Math.PI; // Inverter o cone para baixo
+    body.rotation.x = Math.PI;
 
-    // Aleatoriamente: enterrada ou caída
     const isBuried = Math.random() < 0.5;
 
     // Folhas (cilindros verdes)
@@ -229,11 +221,9 @@ function createCarrot(position) {
     }
 
     if (isBuried) {
-        // Enterrada: metade do corpo abaixo do solo
         body.position.y = 0;
         carrotGroup.position.y = 0;
     } else {
-        // Caída: de lado, deitada no chão
         body.position.y = 0.25;
         carrotGroup.rotation.z = Math.PI / 2 * (Math.random() < 0.5 ? 1 : -1);
         carrotGroup.rotation.x = (Math.random() - 0.5) * 0.3;
@@ -248,17 +238,16 @@ function createCarrot(position) {
 
 
 function createSnowParticles() {
-    const snowCount = 100; // Menos partículas para neve menos condensada
+    const snowCount = 100;
     const geometry = new THREE.BufferGeometry();
     const positions = [];
     const velocities = [];
 
-    // Área menor e mais baixa (centrada no utilizador)
     for (let i = 0; i < snowCount; i++) {
         positions.push(
-            Math.random() * 60 - 30, // X: -30 a 30
-            Math.random() * 40 + 10, // Y: 10 a 50 (mais baixo)
-            Math.random() * 60 - 30  // Z: -30 a 30
+            Math.random() * 60 - 30,
+            Math.random() * 40 + 10,
+            Math.random() * 60 - 30  
         );
         velocities.push(
             (Math.random() - 0.5) * 0.1,
@@ -283,10 +272,8 @@ function createSnowParticles() {
 function setSnowOnScene(enable) {
     for (const chunkGroup of chunks.values()) {
         chunkGroup.children.forEach(obj => {
-            // Árvores (Group com cones)
             if (obj.type === 'Group') {
                 obj.children.forEach(child => {
-                    // Folhas das árvores (ConeGeometry)
                     if (
                         child.isMesh &&
                         child.geometry &&
@@ -294,9 +281,9 @@ function setSnowOnScene(enable) {
                         child.material && child.material.type === 'MeshStandardMaterial'
                     ) {
                         if (enable) {
-                            child.material.color.set(0xffffff); // branco neve
+                            child.material.color.set(0xffffff);
                         } else {
-                            child.material.color.set(0x228B22); // verde original
+                            child.material.color.set(0x228B22);
                         }
                         child.material.needsUpdate = true;
                     }
@@ -308,12 +295,11 @@ function setSnowOnScene(enable) {
 
 let terrainTexture;
 let snowTerrainTexture;
-let treeColliders = []; // Adiciona no topo do ficheiro
-let chunks = new Map(); // Torna global
+let treeColliders = []; 
+let chunks = new Map();
 
-// Guarda o GLTF carregado
 let pigGLTF = null;
-let pigMixers = []; // <-- Adicione isto
+let pigMixers = [];
 
 // Carrega o modelo do porco uma vez
 const gltfLoader = new GLTFLoader();
@@ -321,7 +307,6 @@ gltfLoader.load(
     pigGLBUrl,
     (gltf) => {
         pigGLTF = gltf;
-        // SPAWN retroativo em todos os chunks já criados
         for (const chunkGroup of chunks.values()) {
             spawnPigInChunk(chunkGroup);
         }
@@ -339,7 +324,7 @@ function spawnPigInChunk(chunkGroup) {
         const pig = clone(pigGLTF.scene);
         pig.position.set(
             Math.random() * chunkSize - chunkSize / 2,
-            -0.1, // <-- Ajuste aqui para garantir que os pés tocam o solo
+            -0.1, 
             Math.random() * chunkSize - chunkSize / 2
         );
         pig.scale.set(0.1, 0.1, 0.1);
@@ -347,7 +332,6 @@ function spawnPigInChunk(chunkGroup) {
         pig.name = 'Pig_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
         chunkGroup.add(pig);
 
-        // Adicionar animação se houver
         if (pigGLTF.animations && pigGLTF.animations.length > 0) {
             const mixer = new THREE.AnimationMixer(pig);
             const action = mixer.clipAction(pigGLTF.animations[0]);
@@ -360,7 +344,7 @@ function spawnPigInChunk(chunkGroup) {
 
 let rabbitGLTF = null;
 let rabbitMixers = [];
-let rabbits = []; // <-- Array para guardar os coelhos e seus dados de movimento
+let rabbits = []; 
 
 // Carrega o modelo do coelho uma vez
 const rabbitLoader = new GLTFLoader();
@@ -411,7 +395,6 @@ function spawnRabbitInChunk(chunkGroup) {
         rabbit.name = 'Rabbit_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
         chunkGroup.add(rabbit);
 
-        // Adicionar animação se houver
         if (rabbitGLTF.animations && rabbitGLTF.animations.length > 0) {
             const mixer = new THREE.AnimationMixer(rabbit);
             const action = mixer.clipAction(rabbitGLTF.animations[0]);
@@ -448,7 +431,7 @@ function spawnFoxInChunk(chunkGroup) {
         const fox = clone(foxGLTF.scene);
         fox.position.set(
             Math.random() * chunkSize - chunkSize / 2,
-            +0.1, // <-- Ajuste aqui para garantir que os pés tocam o solo
+            +0.1,
             Math.random() * chunkSize - chunkSize / 2
         );
         fox.scale.set(3.5, 3.5, 3.5);
@@ -456,7 +439,6 @@ function spawnFoxInChunk(chunkGroup) {
         fox.name = 'Fox_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
         chunkGroup.add(fox);
 
-        // Adicionar animação se houver
         if (foxGLTF.animations && foxGLTF.animations.length > 0) {
             const mixer = new THREE.AnimationMixer(fox);
             const action = mixer.clipAction(foxGLTF.animations[0]);
@@ -470,7 +452,6 @@ function spawnFoxInChunk(chunkGroup) {
 function createBerry(position) {
     const berryGroup = new THREE.Group();
 
-    // Corpo principal: esfera vermelha (baga)
     const berryGeometry = new THREE.SphereGeometry(0.09, 16, 16);
     const berryMaterial = new THREE.MeshStandardMaterial({ color: 0xb9001f });
     // Cria 3-5 bagas agrupadas
@@ -485,7 +466,6 @@ function createBerry(position) {
         berryGroup.add(berry);
     }
 
-    // Pequeno "caule" verde
     const stemGeometry = new THREE.CylinderGeometry(0.015, 0.015, 0.08, 8);
     const stemMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
     const stem = new THREE.Mesh(stemGeometry, stemMaterial);
@@ -514,7 +494,6 @@ export function createForestScene() {
     const backgroundRainy = textureLoader.load(rainyTexture);
     scene.background = backgroundDay;
 
-    // Terrain texture (agora global)
     terrainTexture = textureLoader.load(grassTexture);
     terrainTexture.wrapS = terrainTexture.wrapT = THREE.RepeatWrapping;
     terrainTexture.repeat.set(50, 50);
@@ -543,38 +522,38 @@ export function createForestScene() {
     scene.add(directionalLight);
 
     // Criar o sol
-    const sunGeometry = new THREE.SphereGeometry(50, 32, 32); // Esfera para o sol
+    const sunGeometry = new THREE.SphereGeometry(50, 32, 32); 
     const sunMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffff00, // Cor amarela
-        depthTest: false, // Ignorar o teste de profundidade para sempre renderizar o sol
+        color: 0xffff00,
+        depthTest: false,
     });
     sun = new THREE.Mesh(sunGeometry, sunMaterial);
-    sun.position.set(500, 1000, 500); // Posicionar o sol no céu
-    sun.frustumCulled = false; // Desativar frustum culling para o sol
+    sun.position.set(500, 1000, 500); 
+    sun.frustumCulled = false;
     scene.add(sun);
 
     // Criar a lua cheia
-    const moonGeometry = new THREE.SphereGeometry(30, 32, 32); // Esfera para a lua
+    const moonGeometry = new THREE.SphereGeometry(30, 32, 32); 
     const moonMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff, // Cor cinza claro
-        depthTest: false, // Ignorar o teste de profundidade para sempre renderizar a lua
+        color: 0xffffff, 
+        depthTest: false, 
     });
     moon = new THREE.Mesh(moonGeometry, moonMaterial);
-    moon.position.set(500, 1000, 500); // Posicionar a lua no céu
-    moon.frustumCulled = false; // Desativar frustum culling para a lua
-    moon.visible = false; // Inicialmente invisível (apenas visível à noite)
+    moon.position.set(500, 1000, 500); 
+    moon.frustumCulled = false; 
+    moon.visible = false; 
     scene.add(moon);
 
     // Criar a sombra para simular a fase da lua
-    const shadowGeometry = new THREE.SphereGeometry(30.5, 32, 32); // Esfera ligeiramente maior para a sombra
+    const shadowGeometry = new THREE.SphereGeometry(30.5, 32, 32);
     const shadowMaterial = new THREE.MeshBasicMaterial({
-        color: 0x000000, // Cor preta para a sombra
-        depthTest: false, // Ignorar o teste de profundidade para sempre renderizar a sombra
+        color: 0x000000, 
+        depthTest: false, 
     });
     moonShadow = new THREE.Mesh(shadowGeometry, shadowMaterial);
-    moonShadow.position.set(520, 1040, 500); // Ajustar a posição da sombra para criar a fase minguante
-    moonShadow.frustumCulled = false; // Desativar frustum culling para a sombra
-    moonShadow.visible = false; // Inicialmente invisível (apenas visível à noite)
+    moonShadow.position.set(520, 1040, 500); 
+    moonShadow.frustumCulled = false; 
+    moonShadow.visible = false;
     scene.add(moonShadow);
 
     // Criar estrelas
@@ -582,7 +561,7 @@ export function createForestScene() {
     scene.add(stars);
 
     // Chunks de terreno
-    const chunkSize = 50; // Reduzir o tamanho do chunk para testar geração dinâmica
+    const chunkSize = 50; 
 
     const treePositions = new Set(); // Rastrear posições das árvores
 
@@ -592,7 +571,7 @@ export function createForestScene() {
 
         // Criar um grupo para o chunk
         const chunkGroup = new THREE.Group();
-        chunkGroup.name = `chunk_${chunkKey}`; // Nome para facilitar o debug
+        chunkGroup.name = `chunk_${chunkKey}`; 
         chunkGroup.position.set(x * chunkSize, 0, z * chunkSize);
 
         // Criar o terreno
@@ -609,7 +588,7 @@ export function createForestScene() {
 
         // Adicionar relva realista ao chunk
         const grassPatch = createRealisticGrassPatch(
-            new THREE.Vector3(0, 0, 0), // Relativo ao grupo
+            new THREE.Vector3(0, 0, 0), 
             chunkSize,
             100,
             new THREE.TextureLoader().load(grassBladeTexture)
@@ -641,7 +620,7 @@ export function createForestScene() {
                         0,
                         position.z + chunkGroup.position.z
                     ),
-                    radius: 1.2 // Ajusta conforme o tamanho do tronco
+                    radius: 1.2
                 });
             }
         }
@@ -658,7 +637,7 @@ export function createForestScene() {
         }
 
         // Adicionar cenouras colecionáveis ao chunk
-        for (let i = 0; i < 2; i++) { // 2 cenouras por chunk (ajusta como quiseres)
+        for (let i = 0; i < 2; i++) { 
             const pos = new THREE.Vector3(
                 Math.random() * chunkSize - chunkSize / 2,
                 0,
@@ -670,7 +649,7 @@ export function createForestScene() {
         }
 
         // Adicionar bagas colecionáveis ao chunk
-        for (let i = 0; i < 2; i++) { // 2 bagas por chunk (ajusta como quiseres)
+        for (let i = 0; i < 2; i++) { 
             const pos = new THREE.Vector3(
                 Math.random() * chunkSize - chunkSize / 2,
                 0,
@@ -678,18 +657,15 @@ export function createForestScene() {
             );
             const berry = createBerry(pos);
             chunkGroup.add(berry);
-            // (Opcional) Adiciona a um array global se quiseres controlar as bagas
-            // berries.push(berry);
         }
 
         // Adicionar o grupo do chunk à cena
         scene.add(chunkGroup);
         chunks.set(chunkKey, chunkGroup);
 
-        // SPAWN DO PORCO: só se o modelo já estiver carregado
         spawnPigInChunk(chunkGroup);
         spawnRabbitInChunk(chunkGroup);
-        spawnFoxInChunk(chunkGroup); // <-- ADICIONA ESTA LINHA
+        spawnFoxInChunk(chunkGroup);
 
         // Atualizar folhas e chão do chunk se estiver a nevar
         if (currentWeather === 'snow') {
@@ -732,7 +708,6 @@ export function createForestScene() {
     };
 }
 
-// Exporte apenas o necessário, sem mixers ou animações do porco
 export {
     rabbitMixer, rabbit, rabbitAngle, rainParticles, snowParticles,
     treeColliders, pigMixers, rabbitMixers, rabbits, carrots,

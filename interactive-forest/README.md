@@ -53,9 +53,14 @@ interactive-forest
 5. Open your browser and go to `http://localhost:3000` to view the application.
 
 ## Usage
-- Use the `W`, `A`, `S`, `D` keys to move around the forest.
-- Use the mouse to look around and interact with the environment.
-- Experience different weather conditions and explore the wildlife within the forest.
-
-## Contributing
-Contributions are welcome! Please feel free to submit a pull request or open an issue for any suggestions or improvements.
+- **Move**: `W`, `A`, `S`, `D`
+- **Look around**: mouse
+- **Interact**: `E` (pick up carrots/berries, feed animals)
+- **Help menu**: `H`
+- **Change weather**: `R` or "Toggle Weather" button
+- **Adjust chunks**: buttons in the menu or UI
+- **Music**: starts when closing the initial menu (button or H key)
+- **Feeding animals**:
+  - Pigs and rabbits: only with carrots
+  - Foxes: only with berries (they spin when fed)
+- **Sound effects**: each animal plays a unique sound when fed
